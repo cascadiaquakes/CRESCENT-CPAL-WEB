@@ -1,0 +1,162 @@
+{
+    "Evidence Type": {
+        "display": "Yes",
+        "description": "Brief description on the type of paleoseismic evidence"
+    },
+    "Contact Name": {
+        "display": "Yes",
+        "description": "A uniquely indentified name for each interpreted paleoseismic event. Contact names are based largely on those published in primary literature."
+    },
+    "Site": {
+        "display": "Yes",
+        "description": "The geographic name for each site based largely on those published in primary literature."
+    },
+    "Latitude [\u00b0]": {
+        "display": "Yes",
+        "description": "A general latitude for the site in decimal degrees."
+    },
+    "Longitude [\u00b0]": {
+        "display": "Yes",
+        "description": "A general longitude for the site in decimal degrees."
+    },
+    "Environment": {
+        "display": "Yes",
+        "description": "The type of environment that the paleoseismic evidence is preserved in."
+    },
+    "Length of Record [cal yr BP]": {
+        "display": "Yes",
+        "description": "The maximum known age of the record."
+    },
+    "Site-Averaged Evidence Rank\n(0 - 3)": {
+        "display": "Yes",
+        "description": "An average value for the quality of evidence for paleoseismic events at each site."
+    },
+    "Evidence for coseismic proxy": {
+        "display": "Yes",
+        "description": "A description of the published paleoseismic evidence within the stratigraphy or the environment."
+    },
+    "5 - Annual-subannual precision\n": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes material capable of providing annual to sub-annual precision.  If this is marked yes, the age control quality is scored at 5."
+    },
+    "4.5 - \"Close-limiting\" age with growth- position plants": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes material defined as a \"close-limiting\" age. If this is marked yes, the age control quality is scored at 4.5."
+    },
+    "4 - Age with growth- position plants": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes plant material that is in growth position (i.e. not detrital). If this is marked yes, the age control quality is scored at 4."
+    },
+    "3.5 - Multiple bracketing age and dated/well correlated tephra": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes material collected above and below the event and therefore provides a maximum and minimum age and also includes tephra material. If this is marked yes, the age control quality is scored at 3.5."
+    },
+    "3 - Multiple bracketing age from detrital material": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes material collected above and below the event and therefore provides a maximum and minimum age. If this is marked yes, the age control quality is scored at 3."
+    },
+    "2.5 - Non-bracketing age from multiple detrital samples and dated/correlated tephra": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes more than one radiocarbon age, but only material collected above or below the event, and also includes tephra material. If this is marked yes, the age control quality is scored at 2.5."
+    },
+    "2 - Non-bracketing age from multiple detrital samples": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes more than one radiocarbon age, but only material collected above or below the event. If this is marked yes, the age control quality is scored at 2."
+    },
+    "1.5 - Single detrital age and dated/correlated tephra or excess 210Pb": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes a single detrital radiocarbon age analysis and also includes tephra material. If this is marked yes, the age control quality is scored at 1.5."
+    },
+    "1 - Single detrital age": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control includes a single detrital radiocarbon age analysis. If this is marked yes, the age control quality is scored at 1."
+    },
+    "0.5 - Modeled age from bracketing dated horizons or only benthic detrital age": {
+        "display": "No",
+        "description": "A yes/no entry for whether the age control is derived from a modeled estimate but not from dating material directly above or below the event or if the material dated is from benthic foraminifera. If this is marked yes, the age control quality is scored at 0.5."
+    },
+    "Age Rank\n(0 - 5)": {
+        "display": "Yes",
+        "description": "A numerical score on the quality of age control, between 0 and 5, based on the material dated."
+    },
+    "\nA - Stratigraphic suggests abrupt environmental change": {
+        "display": "No",
+        "description": "A yes/no entry for whether there is stratigraphic evidence for abrupt environmental change. If marked yes, this provides 1 point towards the Evidence Rank."
+    },
+    "\nB - Event horizon is laterally extensive within site": {
+        "display": "No",
+        "description": "A yes/no entry for whether there laterally extensive evidence within the site for an event. If marked yes, this provides 1 point towards the Evidence Rank."
+    },
+    "\nC - Vertical land-level change is estimated  >0.5 meters": {
+        "display": "No",
+        "description": "A yes/no entry for whether the estimated magnitude of land-level change is above a 0.5 meter threshold. If marked yes, this provides 1 point towards the Evidence Rank."
+    },
+    "Evidence Rank\n(0 - 3)": {
+        "display": "Yes",
+        "description": "A numerical score on the quality of paleoseismic evidence, between 0 and 3."
+    },
+    "Sum of ranking criteria ": {
+        "display": "No",
+        "description": "A sum of the Age and Evidence Rank for each event."
+    },
+    "Vertical deformation estimate maximum [m]": {
+        "display": "Yes",
+        "description": "A minimum estimate for land-level change across a horizon."
+    },
+    "Vertical deformation estimate minimum [m]": {
+        "display": "Yes",
+        "description": "A maximum estimate for land-level change across a horizon."
+    },
+    "General method of estimation": {
+        "display": "Yes",
+        "description": "A general description of how land-level change was estimated."
+    },
+    "Specific method of estimation": {
+        "display": "Yes",
+        "description": "A specific methods description of how land-level change was estimated."
+    },
+    "Coincident tsunami evidence": {
+        "display": "Yes",
+        "description": "A yes/no entry for whether there is coincident tsunami evidence for this event."
+    },
+    "Coincident liquefaction evidence": {
+        "display": "Yes",
+        "description": "A yes/no entry for whether there is coincident liquefaction evidence for this event."
+    },
+    "Radiocarbon age mean [yr BP]": {
+        "display": "No",
+        "description": "Reported mean uncalibrated radiocarbon age from the literature in radiocarbon years before present (1950 CE)."
+    },
+    "Radiocarbon age uncertainty [yr BP]": {
+        "display": "No",
+        "description": "Reported uncertainty in uncalibrated radiocarbon age from the literature in radiocarbon years before present (1950 CE)."
+    },
+    "Published Event Age Minimum [cal yr BP]": {
+        "display": "Yes",
+        "description": "Published minimum calibrated age for candidate paleoseismic evidence in calendar years before present (1950 CE)."
+    },
+    "Published Event Age Maximum [cal yr BP]": {
+        "display": "Yes",
+        "description": "Published maximum calibrated age for candidate paleoseismic evidence in calendar years before present (1950 CE)."
+    },
+    "Inferred to record 1700 CE": {
+        "display": "Yes",
+        "description": "A yes/no entry for whether the event is inferred to correlate with the inferred 1700 CE full-margin Cascadia earthquake."
+    },
+    "Inferred most likely evidence source": {
+        "display": "Yes",
+        "description": "The published most likely source for an event."
+    },
+    "Other possible evidence source interpretations": {
+        "display": "Yes",
+        "description": "The published alternative sources for an event."
+    },
+    "Reference": {
+        "display": "Yes",
+        "description": "Literature reference for the compiled information."
+    },
+    "Notes": {
+        "display": "Yes",
+        "description": "Notes from compilers that may be specifically useful for interpreting the paleoseismic evidence compiled for this specific site or event."
+    }
+}

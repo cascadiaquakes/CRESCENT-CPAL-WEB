@@ -1,0 +1,1375 @@
+{% extends 'cpal_page.html' %}
+
+{% block style%}
+<link rel="stylesheet" href="/static/css/repository.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Unique flag only for this page
+    window.SKIP_CESIUM = { skip: true };
+</script>
+
+<!-- Load config.js synchronously 
+                 Synchronous XHR ensures loading order: The browser halts execution until config.js is fetched and executed, 
+                ensuring that all variables are available. If config.js fails to load, a console error message will help diagnose issues.
+                xhrs block the browser’s rendering and prevent the user from interacting with the page until the request completes. However, this
+                pause shoud be brief.-->
+<script>
+    console.log("Starting the script ");// + Cesium.Ion.defaultAccessToken);
+    // Dynamically create and load the configuration script synchronously before loading other scripts
+    let branch = "{{ branch }}";
+    let configFilePath = `/static/config/${branch === "main" ? "" : branch + "/"}config.js`;
+
+    if (branch !== "main") {
+        //alert("[WARN] Loading configuration from the branch: [" + branch + "]\n" + configFilePath);
+    }
+
+    // Load config.js synchronously to ensure its variables are available before other scripts run
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', configFilePath, false); // `false` makes the request synchronous
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let script = document.createElement('script');
+            script.text = xhr.responseText;
+            document.head.appendChild(script);
+
+            // Function to capitalize the branch name
+            function capitalizeBranchName(branch) {
+                return branch.charAt(0).toUpperCase() + branch.slice(1);
+            }
+            // Dynamically update the page title if the branch is not "main"
+            if (branch !== "main") {
+                let currentTitle = document.title;
+                let domain = window.location.hostname;
+                let capitalizedBranch = capitalizeBranchName(branch);
+                document.title = `[${capitalizedBranch} - ${domain}] ${currentTitle}`;
+                //alert("Page title updated to: " + document.title);
+
+            }
+        } else {
+            console.error("Failed to load config.js");
+        }
+    };
+    xhr.send(null);
+</script>
+
+{% endblock %}
+{% block description %}
+<div class="info-message">
+</div>
+<div class="description">
+
+    <h2>CPAL Paleoseismic Compilation</h2>
+    <p>
+        The Paleoseismology Group at Cascadia Quakes specializes in studying past earthquake events through geological
+        evidence, enhancing our understanding of seismic hazards in the Cascadia Subduction Zone. Our research focuses
+        on analyzing ancient fault lines, sediment layers, and other geological markers to improve predictions of future
+        seismic activity and to inform strategies for earthquake preparedness and risk mitigation.
+    </p>
+    <p>
+        The map on this page displays CPAL's latest compilation of paleoseismic proxies, represented by distinct symbols
+        and colors. Click on a marker to explore its associated dataset. Use the map controls below to refine the
+        display and focus on your desired dataset (click on <strong><span style="color:red;">▶</span> Show/Hide Dataset
+            & Plot Controls</strong> to toggle the controls).
+        As you zoom in and encounter overlapping markers, right-click near the marker cluster to spread out the markers.
+        Right-click again to return the markers to their original positions.
+    </p>
+    <p>
+        Additional controls above the map include:
+    </p>
+    <ul>
+        <li><strong>View Home</strong> – Resets the map zoom and viewport to the default setting.</li>
+        <li><strong>Clear Highlight</strong> – Removes highlights from all previously highlighted markers.</li>
+        <li><strong>Group Markers</strong> – Returns markers that have been spread out back to their original positions
+            (similar to a second right-click).</li>
+        <li><strong>Spread Offset</strong> – Adjusts the distance between spread-out markers, allowing you to fine-tune
+            based on zoom level.</li>
+        <li><strong>Select a Site</strong> (dropdown) – Zooms in to a selected site from the list.</li>
+    </ul>
+
+</div>
+{% endblock %}
+{% block filter %}
+
+<div id="filterPanel" style="display:none;">
+    <div id="controlContainer">
+
+        <div class="three-column-container">
+            <!-- Column 1 -->
+            <div class="column">
+                <h3>Data:</h3>
+                <div id="fileTable" class="modelSelect"><b>Selected Dataset(s):</b>
+                    <div id="datasetContainer" style="margin-top: 5pt;"></div>
+                </div>
+                <div class="sliderContainer" style="font-weight: bold; display:block;"></div>
+                <div style="margin-top: 10px;">
+                    <label for="latRange">Latitude Range:</label>
+                    <input type="range" id="latMinSlider">
+                    <input type="range" id="latMaxSlider">
+                    <span id="latRangeValue" style="font-size: 9pt;"></span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="lonRange">Longitude Range:</label>
+                    <input type="range" id="lonMinSlider">
+                    <input type="range" id="lonMaxSlider">
+                    <span id="lonRangeValue" style="font-size: 9pt;"></span>
+                </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="column">
+                <h3>Filters:</h3>
+
+                <div style="margin-top: 10px;">
+                    <label for="siteEvidenceRankFilter">Site-Averaged Evidence Rank:</label>
+                    <select id="siteEvidenceRankFilter">
+                        <option value="0" selected>Show All (0+)</option>
+                        <option value="1">1+</option>
+                        <option value="2">2+</option>
+                        <option value="3">3+</option>
+                    </select>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="ageRankFilter">Age Rank:</label>
+                    <select id="ageRankFilter">
+                        <option value="0" selected>Show All (0+)</option>
+                        <option value="1">1+</option>
+                        <option value="2">2+</option>
+                        <option value="3">3+</option>
+                        <option value="4">4+</option>
+                        <option value="5">5+</option>
+                    </select>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="evidenceRankFilter">Evidence Rank:</label>
+                    <select id="evidenceRankFilter">
+                        <option value="0" selected>Show All (0+)</option>
+                        <option value="1">1+</option>
+                        <option value="2">2+</option>
+                        <option value="3">3+</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Column 3 -->
+            <div class="column">
+                <h3>Plot:</h3>
+
+                <div>
+                    <label for="xAxisSelector">Chart's X-axis:</label>
+                    <select id="xAxisSelector">
+                        <option value="events">Number of Events</option>
+                        <option value="length">Length of Record</option>
+                    </select>
+                    <div></div><button id="plotButton" style="margin-top: 10pt;">Plot Chart</button>
+                    <button id="centeredViewButton" style="margin-top: 10pt;">Home View</button>
+                </div>
+                <button id="downloadGeoJSON" style="width:51%;">Download Filtered Data\n(GeoJSON)</button>
+
+                <button id="toggleGuideButton" style="width:51%;" onclick="toggleGuide()">Help</button>
+                <div id="chartUserGuide" style="display: none; margin-top: 10px;">
+                    <h3>User Guide: Interactive Latitude Chart</h3>
+                    <p>
+                        The <strong>Interactive Latitude Chart</strong> allows you to visualize data
+                        distributions
+                        across latitude bins.
+                        You can customize the chart's X-axis to display either:
+                    </p>
+                    <ol>
+                        <li>
+                            <strong>Number of Events:</strong> The total count of events occurring within each
+                            latitude
+                            range.
+                        </li>
+                        <li>
+                            <strong>Length of Record:</strong> The cumulative length of records in
+                            <em>calibrated years BP (cal yr BP)</em> for events within each latitude range.
+                            This metric always uses the absolute value of the record length.
+                        </li>
+                    </ol>
+                    <p>To interact with the chart:</p>
+                    <ul>
+                        <li>
+                            <strong>Select X-axis Metric:</strong> Use the dropdown menu to choose between
+                            "Number of
+                            Events" or "Length of Record."
+                        </li>
+                        <li>
+                            <strong>Filter Data:</strong> Choose specific datasets or subsets from the dropdown
+                            menu to
+                            focus on particular data.
+                        </li>
+                        <li>
+                            <strong>View Details:</strong> Hover over bars in the chart to view detailed data
+                            for each
+                            latitude bin.
+                        </li>
+                    </ul>
+                    <p>
+                        The Y-axis represents latitude, with lower latitudes at the bottom and higher latitudes
+                        at the
+                        top.
+                        The X-axis dynamically adjusts based on the selected metric. Use this chart to gain
+                        insights
+                        into spatial distributions and data trends related to your selected datasets.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+</div>
+{% endblock %}
+{% block leftpanel %}
+<div id="fileListPanel">
+    <div id="toggleFilterPanel" onclick="toggleFilterPanel()" class="filterToggleBtn">
+        <span style="color: red;">&#9654;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls
+    </div>
+    <div>
+        <div id="infobox"></div>
+    </div>
+</div>
+{% endblock %}
+{% block rightpanel %}
+<div id="contentPanel">
+    <span id="cmodelname" style="display:none;"></span>CRESCENT Paleoseismic Dataset(s)
+    <div id="results-panel" class="action_side" style="flex:0 0 67.5%;">
+        <iframe src="/map3d" width="99.5%" height="1200px" id="3dIframe"
+            sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="/static/config/project.js"></script>
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // Get slider elements
+        document.getElementById("latMinSlider").addEventListener("input", function () {
+            updateRangeDisplay();
+            updateFilteredData();
+        });
+        document.getElementById("latMaxSlider").addEventListener("input", function () {
+            updateRangeDisplay();
+            updateFilteredData();
+        });
+        document.getElementById("lonMinSlider").addEventListener("input", function () {
+            updateRangeDisplay();
+            updateFilteredData();
+        });
+        document.getElementById("lonMaxSlider").addEventListener("input", function () {
+            updateRangeDisplay();
+            updateFilteredData();
+        });
+
+        const latRangeValue = document.getElementById("latRangeValue");
+        const lonRangeValue = document.getElementById("lonRangeValue");
+
+        // Initialize sliders based on midpoints
+        latMinSlider.min = south;
+        latMinSlider.max = (south + north) / 2;
+        latMinSlider.value = south;
+
+        latMaxSlider.min = (south + north) / 2;
+        latMaxSlider.max = north;
+        latMaxSlider.value = north;
+
+        lonMinSlider.min = west;
+        lonMinSlider.max = (west + east) / 2;
+        lonMinSlider.value = west;
+
+        lonMaxSlider.min = (west + east) / 2;
+        lonMaxSlider.max = east;
+        lonMaxSlider.value = east;
+
+        // Function to update displayed range values
+        function updateRangeDisplay() {
+            latRangeValue.textContent = `(${latMinSlider.value}° to ${latMaxSlider.value}°)`;
+            lonRangeValue.textContent = `(${lonMinSlider.value}° to ${lonMaxSlider.value}°)`;
+        }
+
+        // Listen for changes and update the displayed values
+        latMinSlider.addEventListener("input", updateRangeDisplay);
+        latMaxSlider.addEventListener("input", updateRangeDisplay);
+        lonMinSlider.addEventListener("input", updateRangeDisplay);
+        lonMaxSlider.addEventListener("input", updateRangeDisplay);
+
+        // Initialize display on page load
+        updateRangeDisplay();
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        function filterDataByRange(features) {
+            const latMin = parseFloat(document.getElementById("latMinSlider").value);
+            const latMax = parseFloat(document.getElementById("latMaxSlider").value);
+            const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
+            const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+
+            // Filter features that fall within the selected lat/lon range
+            return features.filter(feature => {
+                const lat = feature.geometry.coordinates[1];
+                const lon = feature.geometry.coordinates[0];
+                return lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax;
+            });
+        }
+
+        function getFilteredGeoJSON(selectedValues) {
+            let filteredFeatures = [];
+
+            const latMin = parseFloat(document.getElementById("latMinSlider").value);
+            const latMax = parseFloat(document.getElementById("latMaxSlider").value);
+            const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
+            const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+
+            // Fetch and filter data
+            const geojsonFetchPromises = selectedValues.map(value => {
+                const geojsonUrl = GEOJSON_URLS[value];
+
+                return fetch(geojsonUrl)
+                    .then(response => response.json())
+                    .then(geojson => {
+                        filteredFeatures.push(
+                            ...geojson.features.filter(feature => {
+                                const lat = feature.geometry.coordinates[1];
+                                const lon = feature.geometry.coordinates[0];
+                                return lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax;
+                            })
+                        );
+                    })
+                    .catch(error => console.error(`Error fetching ${geojsonUrl}:`, error));
+            });
+
+            return Promise.all(geojsonFetchPromises).then(() => {
+                return {
+                    type: "FeatureCollection",
+                    features: filteredFeatures
+                };
+            });
+        }
+
+
+        function downloadGeoJSON() {
+            function getFilteredGeoJSON() {
+                const selectedValues = getSelectedDatasetValues();
+                let filteredFeatures = [];
+
+                if (selectedValues.length === 0) {
+                    console.warn("No datasets selected. Download will be empty.");
+                    return Promise.resolve({ type: "FeatureCollection", features: [] });
+                }
+
+                console.log("Fetching datasets for GeoJSON download:", selectedValues);
+
+                const geojsonFetchPromises = selectedValues.map(value => {
+                    const geojsonUrl = GEOJSON_URLS[value];
+
+                    return fetch(geojsonUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to load ${geojsonUrl}`);
+                            }
+                            return response.json();
+                        })
+                        .then(geojson => {
+                            filteredFeatures.push(...filterDataByRange(geojson.features));
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching ${geojsonUrl}:`, error);
+                        });
+                });
+
+                return Promise.all(geojsonFetchPromises).then(() => {
+                    console.log(`Filtered features count: ${filteredFeatures.length}`);
+                    return {
+                        type: "FeatureCollection",
+                        features: filteredFeatures
+                    };
+                });
+            }
+
+            // ✅ Call `getFilteredGeoJSON()` and handle the result
+            getFilteredGeoJSON().then(filteredGeoJSON => {
+                if (!filteredGeoJSON || !filteredGeoJSON.features || filteredGeoJSON.features.length === 0) {
+                    console.warn("No data available for download.");
+                    alert("No filtered data available to download.");
+                    return;
+                }
+
+                console.log(`Preparing to download ${filteredGeoJSON.features.length} features...`);
+
+                try {
+                    const geojsonStr = JSON.stringify(filteredGeoJSON, null, 2);
+                    const blob = new Blob([geojsonStr], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "filtered_data.geojson";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    console.log("Download completed successfully.");
+                } catch (error) {
+                    console.error("Error generating GeoJSON file:", error);
+                    alert("Error generating GeoJSON file.");
+                }
+            }).catch(error => {
+                console.error("Error in GeoJSON processing:", error);
+                alert("Failed to download GeoJSON.");
+            });
+        }
+
+        // ✅ Ensure button is properly connected
+        document.getElementById("downloadGeoJSON").addEventListener("click", downloadGeoJSON);
+
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        function initializeSliders() {
+            if (typeof MAP_BOUNDS === "undefined") {
+                console.error("MAP_BOUNDS is not defined. Retrying in 100ms...");
+                setTimeout(initializeSliders, 100); // Retry in 100ms
+                return;
+            }
+
+            const latMinSlider = document.getElementById("latMinSlider");
+            const latMaxSlider = document.getElementById("latMaxSlider");
+            const lonMinSlider = document.getElementById("lonMinSlider");
+            const lonMaxSlider = document.getElementById("lonMaxSlider");
+
+            latMinSlider.min = MAP_BOUNDS.south;
+            latMinSlider.max = (MAP_BOUNDS.north + MAP_BOUNDS.south) / 2.0;
+            latMinSlider.value = MAP_BOUNDS.south;
+
+            latMaxSlider.min = (MAP_BOUNDS.south + MAP_BOUNDS.north) / 2.0;
+            latMaxSlider.max = MAP_BOUNDS.north;
+            latMaxSlider.value = MAP_BOUNDS.north;
+
+            lonMinSlider.min = MAP_BOUNDS.west;
+            lonMinSlider.max = (MAP_BOUNDS.east + MAP_BOUNDS.west) / 2.0;
+            lonMinSlider.value = MAP_BOUNDS.west;
+
+            lonMaxSlider.min = (MAP_BOUNDS.west + MAP_BOUNDS.east) / 2.0;
+            lonMaxSlider.max = MAP_BOUNDS.east;
+            lonMaxSlider.value = MAP_BOUNDS.east;
+
+            updateRangeText();
+            console.log("Sliders initialized with MAP_BOUNDS:", MAP_BOUNDS);
+        }
+
+        function updateRangeText() {
+            document.getElementById("latRangeValue").textContent = `(${latMinSlider.value}° to ${latMaxSlider.value}°)`;
+            document.getElementById("lonRangeValue").textContent = `(${lonMinSlider.value}° to ${lonMaxSlider.value}°)`;
+        }
+
+        function updatePlot() {
+            console.log("Updating graph and map...");
+
+            const selectedValues = getSelectedDatasetValues(); // Ensure selected datasets are retrieved
+            if (selectedValues.length === 0) {
+                console.warn("No datasets selected, using all available datasets.");
+                selectedValues.push(...Object.keys(GEOJSON_URLS)); // Use all datasets if none are selected
+            }
+
+            plotData(selectedValues); // Ensure graph updates
+
+            const latMin = parseFloat(document.getElementById("latMinSlider").value);
+            const latMax = parseFloat(document.getElementById("latMaxSlider").value);
+            const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
+            const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+            const minEvidenceRank = parseInt(document.getElementById("evidenceRankFilter").value, 10);
+            const minAgeRank = parseInt(document.getElementById("ageRankFilter").value, 10);
+            const minSiteEvidenceRank = parseInt(document.getElementById("siteEvidenceRankFilter").value, 10);
+
+            const iframe = document.getElementById("3dIframe");
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    //action: "updateMapBounds",
+                    action: "updateMarkers",
+                    latMin: latMin,
+                    latMax: latMax,
+                    lonMin: lonMin,
+                    lonMax: lonMax,
+                    minEvidenceRank: minEvidenceRank,
+                    minAgeRank: minAgeRank,
+                    minSiteEvidenceRank: minSiteEvidenceRank
+                }, "*");
+
+                iframe.contentWindow.postMessage({
+                    action: "updateSelectionOverlay",
+                    latMin: latMin,
+                    latMax: latMax,
+                    lonMin: lonMin,
+                    lonMax: lonMax,
+                    minEvidenceRank: minEvidenceRank,
+                    minAgeRank: minAgeRank,
+                    minSiteEvidenceRank: minSiteEvidenceRank
+                }, "*");
+            }
+        }
+
+        document.getElementById("datasetContainer").addEventListener("change", updateFilteredData);
+
+        document.getElementById("latMinSlider").addEventListener("change", updatePlot);
+        document.getElementById("latMaxSlider").addEventListener("change", updatePlot);
+        document.getElementById("lonMinSlider").addEventListener("change", updatePlot);
+        document.getElementById("lonMaxSlider").addEventListener("change", updatePlot);
+
+        // 🔹 Ensure the graph and map appear immediately on page load
+        window.onload = function () {
+            console.log("Initializing graph & map on page load...");
+            initializeSliders();
+            updatePlot(); // ✅ Ensure both graph and map update on first load
+        };
+    });
+
+
+
+
+    let lastHighlightedMarker = null;
+    let lastHighlightedBarMarkers = [];
+    // Guide 
+    function toggleGuide() {
+        const guideDiv = document.getElementById("chartUserGuide");
+        const button = document.getElementById("toggleGuideButton");
+        if (guideDiv.style.display === "none") {
+            guideDiv.style.display = "block";
+            button.textContent = "Hide Help";
+        } else {
+            guideDiv.style.display = "none";
+            button.textContent = "Show Help";
+        }
+    }
+
+    /**
+     * Generates HTML content from a given JSON object, handling nested structures recursively.
+     * 
+     * @param {Object} jsonData - The JSON object to be converted into HTML.
+     * @returns {string} - The generated HTML content as a string.
+     */
+    function createHtmlFromJson(jsonData) {
+        /**
+         * Recursively processes JSON data to generate HTML content.
+         * 
+         * @param {Object} jsonData - The current level of the JSON object to be processed.
+         * @returns {string} - The HTML content for the current level of the JSON object.
+         */
+        function processJson(jsonData) {
+            let htmlContent = '<div class="json-container">';
+            for (let key in jsonData) {
+                if (typeof jsonData[key] === 'object' && jsonData[key] !== null) {
+                    htmlContent += `<div><b>${key}:</b>${processJson(jsonData[key])}</div>`;
+                } else {
+                    htmlContent += `<div><b>${key}:</b> ${jsonData[key]}</div>`;
+                }
+            }
+            htmlContent += '</div>';
+            return htmlContent;
+        }
+
+        return processJson(jsonData);
+    }
+
+    // Toggle filter panel.
+    function toggleFilterPanel() {
+        var filterPanel = document.getElementById("filterPanel");
+        var button = document.getElementById("toggleFilterPanel");
+        if (filterPanel.style.display === "none") {
+            filterPanel.style.display = "block";
+            button.innerHTML = '<span style="color:red;">&#9650;&nbsp;</span>Show / Hide Controls'// Up arrow
+        } else {
+            filterPanel.style.display = "none";
+            button.innerHTML = '<span style="color:red;">&#9654;&nbsp;</span>Show / Hide Controls' // Side  arrow
+        }
+    }
+
+
+
+    // Change form's selection
+    function selectOptionInForm(model) {
+        const select = document.getElementById('data-file');
+        let optionFound = false;
+
+        if (select) {
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].text.trim() === model) {
+                    select.selectedIndex = i;
+                    optionFound = true;
+                    // Trigger the change event
+                    const event = new Event('change');
+                    select.dispatchEvent(event);
+                    break;
+                }
+            }
+
+            if (!optionFound) {
+                alert('Error: Option not found');
+            }
+        } else {
+            alert('Error: Select element not found in form: ' + model);
+        }
+    }
+
+    // Monitor iframes selection change 
+    function monitorIframeSelection() {
+        const iframe = document.getElementById('3dIframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        let previousValue = '';
+
+        if (iframeDoc) {
+            const select = iframeDoc.getElementById('data-file');
+            if (select) {
+                setInterval(() => {
+                    const currentValue = select.options[select.selectedIndex].text;
+                    if (currentValue !== previousValue) {
+
+                        previousValue = currentValue;
+                        //selectOptionInForm(currentValue);
+                        // Handle the selection change as needed
+                        //loadFileListAndJSON(currentValue)
+                        const event = new Event("change");
+                        select.dispatchEvent(event);
+
+                    }
+                }, 1000); // Check every second (adjust the interval as needed)
+            } else {
+                console.error('Select element not found in iframe');
+            }
+        } else {
+            console.error('Iframe document not accessible');
+        }
+    }
+    /*
+        window.onload = function () {
+            monitorIframeSelection();
+            populateLatLonInputs();
+        }
+    */
+    // Function to fetch the CGI script output and inject it into the <div>
+    function loadFileListAndJSON(model) {
+
+        var count = 0;
+        let lat_min = south;
+        let lat_max = north;
+        let lon_min = west;
+        let lon_max = east;
+
+        let summary = "-";
+        let filename = "-";
+
+        // Change the iframe's selection
+        function selectOptionInIframe(model) {
+            const iframe = document.getElementById('3dIframe');
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const select = iframeDoc.getElementById('data-file');
+            let optionFound = false;
+
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text === model) {
+                        select.selectedIndex = i;
+                        optionFound = true;
+                        // Trigger the change event
+                        const event = new Event('click');
+                        select.dispatchEvent(event);
+                        break;
+                    }
+                }
+
+                if (!optionFound) {
+                    alert('Error: Option not found');
+                }
+            } else {
+                alert('Error: Select element not found in iframe');
+            }
+        }
+
+        // Display file metadata.
+        function display_metadata(model, filePath) {
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(jsonData => {
+                    // Display JSON content in the panel
+                    document.getElementById("mmodelname").innerHTML = model + " Metadata";
+                    document.getElementById("jsonContent").innerHTML = createHtmlFromJson(jsonData);
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+        }
+
+    }
+
+    // Function to populate the selection boxes with models from the table
+    function populateModelSelectionBoxes() {
+        const rows = document.querySelectorAll('#fileTable tr');
+        const modelOptions = [];
+
+        // Skip the first row (header)
+        rows.forEach((row, index) => {
+            if (index === 0) return; // Skip the header
+
+            const modelName = row.cells[1].textContent.trim(); // Assuming the model name is in the 2nd column
+            if (modelName) {
+                modelOptions.push(modelName);
+            }
+        });
+
+        const modelSelects = document.querySelectorAll('.modelSelect');
+        modelSelects.forEach((select, index) => {
+            // Clear existing options
+            select.innerHTML = '';
+
+            // Add a default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a model';
+            select.appendChild(defaultOption);
+
+            // Populate with model options
+            modelOptions.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                select.appendChild(option);
+            });
+
+            // Initialize the data-previous-value attribute
+            select.setAttribute('data-previous-value', '');
+
+            // Add event listener to each selection box
+            select.addEventListener('change', function () {
+                handleModelSelection(this, index + 1);
+            });
+        });
+    }
+
+    // Function to handle model selection change
+    function handleModelSelection(select, modelIndex) {
+        const selectedModel = select.value;
+        const previouslySelectedModel = select.getAttribute('data-previous-value');
+
+        if (selectedModel) {
+            if (isModelAlreadySelected(selectedModel, select)) {
+                alert(`The model "${selectedModel}" has already been selected. Please choose another model.`);
+                select.value = previouslySelectedModel; // Revert to the previously selected model
+            } else {
+                if (previouslySelectedModel) {
+                    enableModelOption(previouslySelectedModel); // Re-enable the previously selected model
+                }
+                findModelCoordinates(selectedModel, modelIndex); // Pass the modelIndex (1-based index)
+                select.setAttribute('data-previous-value', selectedModel); // Update the data attribute
+                disableSelectedModels(); // Disable already selected models in other dropdowns
+            }
+        } else {
+            // If "Select a model" is chosen again, pass the previous model and modelIndex -1
+            if (previouslySelectedModel) {
+                findModelCoordinates(previouslySelectedModel, -1);
+                enableModelOption(previouslySelectedModel); // Re-enable the previously selected model
+                select.setAttribute('data-previous-value', ''); // Clear the data attribute
+            }
+        }
+    }
+
+    // Function to check if a model is already selected in another dropdown
+    function isModelAlreadySelected(model, currentSelect) {
+        const modelSelects = document.querySelectorAll('.modelSelect');
+        for (let select of modelSelects) {
+            if (select !== currentSelect && select.value === model) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Function to disable already selected models in other dropdowns
+    function disableSelectedModels() {
+        const modelSelects = document.querySelectorAll('.modelSelect');
+        const selectedModels = Array.from(modelSelects).map(select => select.value);
+
+        modelSelects.forEach(select => {
+            const options = select.options;
+            for (let i = 0; i < options.length; i++) {
+                if (selectedModels.includes(options[i].value) && options[i].value !== '') {
+                    options[i].disabled = true;
+                } else {
+                    options[i].disabled = false;
+                }
+            }
+        });
+    }
+
+    // Function to enable a model option in all dropdowns
+    function enableModelOption(model) {
+        const modelSelects = document.querySelectorAll('.modelSelect');
+        modelSelects.forEach(select => {
+            const options = select.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === model) {
+                    options[i].disabled = false;
+                }
+            }
+        });
+    }
+
+    // Function to find the coordinates of the selected model from the table
+    function findModelCoordinates(modelName, modelIndex) {
+        const rows = document.querySelectorAll('#fileTable tr');
+
+        rows.forEach((row, index) => {
+            if (index === 0) return; // Skip the header
+
+            const currentModelName = row.cells[1].textContent.trim();
+            if (currentModelName === modelName) {
+                const latMinVal = parseFloat(row.cells[3].textContent);
+                const latMaxVal = parseFloat(row.cells[4].textContent);
+                const lonMinVal = parseFloat(row.cells[5].textContent);
+                const lonMaxVal = parseFloat(row.cells[6].textContent);
+
+                // Pass the coordinates and model name to the function to call filterOutline
+                displayCoordinates(latMinVal, latMaxVal, lonMinVal, lonMaxVal, modelName, modelIndex);
+            }
+        });
+    }
+
+    // Function to pass coordinates and model name to the filterOutline method
+    function displayCoordinates(latMin, latMax, lonMin, lonMax, modelName, modelIndex) {
+        const iframe = document.getElementById('3dIframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeDoc) {
+            // Access the content window of the iframe
+            const iframeWindow = iframe.contentWindow;
+            iframeWindow.filterOutline(latMax, latMin, lonMax, lonMin, 8, modelName, modelIndex);
+        }
+    }
+
+    // Function to clear all models and trigger change event
+    function clearAllModels() {
+        const modelSelects = document.querySelectorAll('.modelSelect');
+        modelSelects.forEach(select => {
+            const previouslySelectedModel = select.getAttribute('data-previous-value');
+
+            // If a model was previously selected, pass it with index -1 and enable it
+            if (previouslySelectedModel) {
+                findModelCoordinates(previouslySelectedModel, -1);
+                enableModelOption(previouslySelectedModel);
+            }
+
+            select.value = ''; // Set to "Select a model"
+            select.setAttribute('data-previous-value', ''); // Clear previous value
+            select.dispatchEvent(new Event('change')); // Trigger change event
+        });
+    }
+
+    // Function to load the file list and then populate the selection boxes
+    function loadFileListAndPopulateSelections(model) {
+        fetch('/list_json_files/' + model) // Replace with the URL to your CGI script
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // Assuming CGI script returns HTML
+            })
+            .then(html => {
+                // Inject the received HTML into the fileTable div
+                document.getElementById('fileTable').innerHTML = html;
+
+                // Extract and populate variables into the select dropdown
+                extractAndPopulateVariables();
+
+                // Populate the model selection boxes
+                populateModelSelectionBoxes();
+
+                // Attach event listener to table rows (as in your original code)
+                // ...
+            })
+            .catch(error => console.error('Error fetching file list:', error));
+    }
+
+    // Select the iframe element
+    const iframe = document.getElementById('3dIframe');
+
+    // Ensure the iframe and its content are accessible
+    if (iframe && iframe.contentWindow) {
+        // Access the variable within the iframe's window context
+        lastHighlightedMarker = iframe.contentWindow.lastHighlightedMarker;
+        lastHighlightedBarMarkers = iframe.contentWindow.lastHighlightedBarMarkers;
+
+        // Check if the variable exists and log its value
+        if (lastHighlightedMarker !== undefined) {
+            console.log('Value of  lastHighlightedMarker:', lastHighlightedMarker);
+        } else {
+            console.log(' lastHighlightedMarker is not defined in the iframe.');
+        }
+    } else {
+        console.log('Iframe or its content is not accessible.');
+    }
+
+    // Define Latitude Bins
+    function createLatitudeBins(minLat, maxLat, step) {
+        const bins = [];
+        for (let lat = minLat; lat <= maxLat; lat += step) {
+            bins.push(lat);
+        }
+        return bins;
+    }
+
+
+    document.getElementById('plotButton').addEventListener('click', getSelectedDatasetValues());
+
+    // Function to get selected dataset values from the datasetDropdown
+    function getSelectedDatasetValues() {
+        const selectionBox = document.getElementById('datasetDropdown'); // Use the correct ID
+        if (selectionBox && selectionBox.selectedOptions.length > 0) {
+            const selectedOptions = Array.from(selectionBox.selectedOptions);
+            return selectedOptions.map(option => option.value); // Use values directly
+        }
+        // If the dropdown is empty, return all dataset values by default
+        return Object.keys(PROXY_TYPES); // Assuming PROXY_TYPES is now an object with dataset values as keys
+    }
+
+
+    /**
+     * Helper function to extract a valid number.
+     * Returns null if the input is not a number.
+     */
+    function getValidNumber(value) {
+        if (typeof value === "string") {
+            value = value.trim(); // Remove extra spaces
+        }
+        const num = parseFloat(value);
+        return isNaN(num) ? null : num;
+    }
+
+    // Create latitude bins
+    function createLatitudeBins(south, north, step) {
+        const bins = [];
+        for (let lat = south; lat <= north; lat += step) {
+            bins.push(lat);
+        }
+        return bins;
+    }
+
+    document.getElementById("evidenceRankFilter").addEventListener("change", updateFilteredData);
+    document.getElementById("ageRankFilter").addEventListener("change", updateFilteredData);
+    document.getElementById("siteEvidenceRankFilter").addEventListener("change", updateFilteredData);
+
+    function updateFilteredData() {
+        const selectedValues = getSelectedDatasetValues(); // Get selected datasets
+        getFilteredGeoJSON(selectedValues).then(filteredGeoJSON => {
+            plotData(filteredGeoJSON); // Ensure the chart updates with filtered data
+            updateMapMarkers(); // Ensure markers on the map update
+        });
+    }
+
+    function updateMapMarkers() {
+        const iframe = document.getElementById("3dIframe");
+        if (!iframe || !iframe.contentWindow) {
+            console.error("Iframe not accessible for updating markers.");
+            return;
+        }
+
+        const latMin = parseFloat(document.getElementById("latMinSlider").value);
+        const latMax = parseFloat(document.getElementById("latMaxSlider").value);
+        const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
+        const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+        const minEvidenceRank = parseInt(document.getElementById("evidenceRankFilter").value, 10);
+        const minAgeRank = parseInt(document.getElementById("ageRankFilter").value, 10);
+        const minSiteEvidenceRank = parseInt(document.getElementById("siteEvidenceRankFilter").value, 10);
+
+        console.log("Sending filter update to iframe:", {
+            latMin, latMax, lonMin, lonMax,
+            minEvidenceRank, minAgeRank, minSiteEvidenceRank
+        });
+
+        iframe.contentWindow.postMessage({
+            action: "updateMarkers",
+            latMin: latMin,
+            latMax: latMax,
+            lonMin: lonMin,
+            lonMax: lonMax,
+            minEvidenceRank: minEvidenceRank,
+            minAgeRank: minAgeRank,
+            minSiteEvidenceRank: minSiteEvidenceRank
+        }, "*");
+        iframe.contentWindow.postMessage({
+            action: "updateSelectionOverlay",
+            latMin: latMin,
+            latMax: latMax,
+            lonMin: lonMin,
+            lonMax: lonMax,
+            minEvidenceRank: minEvidenceRank,
+            minAgeRank: minAgeRank,
+            minSiteEvidenceRank: minSiteEvidenceRank
+        }, "*");
+
+    }
+
+    // Ensure filters trigger updates
+    document.getElementById("evidenceRankFilter").addEventListener("change", updateMapMarkers);
+    document.getElementById("ageRankFilter").addEventListener("change", updateMapMarkers);
+    document.getElementById("siteEvidenceRankFilter").addEventListener("change", updateMapMarkers);
+
+    // Function to notify the iframe to highlight a site marker
+    function highlightMarkerOnMap(siteNames, evidenceType) {
+        const iframe = document.getElementById('3dIframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ action: "highlightMarker", sites: siteNames, evidence: evidenceType }, "*");
+        } else {
+            console.error("Iframe or map is not accessible.");
+        }
+    }
+
+
+    // Create latitude bins (now using 0.1 intervals)
+    function createLatitudeBins(south, north, step = 0.1) {
+        const bins = [];
+        for (let lat = south; lat <= north; lat += step) {
+            bins.push(lat);
+        }
+        return bins;
+    }
+
+    // Bin data by latitude and site, using the midpoint of the latitude range
+    function computeDataByLatitudeBin(features, bins, metric) {
+        const binCounts = {};
+        // Get ranking thresholds from selection menus, ensuring values are rounded to one decimal place
+        const minEvidenceRank = parseFloat(parseFloat(document.getElementById("evidenceRankFilter").value).toFixed(1));
+        const minAgeRank = parseFloat(parseFloat(document.getElementById("ageRankFilter").value).toFixed(1));
+        const minSiteEvidenceRank = parseFloat(parseFloat(document.getElementById("siteEvidenceRankFilter").value).toFixed(1));
+
+        // Step 1: Determine max ranks per (site, evidenceType)
+        const maxRanks = {};
+
+        features.forEach(feature => {
+            const site = feature.properties["Site"] || "Unknown";
+            const evidenceType = feature.properties["Evidence Type"] || "Unknown";
+
+            // Extract rank values, ensuring only valid numbers are used. Account for both Rank\n() and Rank()
+            const siteEvidenceRank = getValidNumber(
+                feature.properties["Site-Averaged Evidence Rank (0 - 3)"] ??
+                feature.properties["Site-Averaged Evidence Rank(0 - 3)"]
+            );
+            const ageRank = getValidNumber(
+                feature.properties["Age quality ranking Age Rank (0 - 5)"] ??
+                feature.properties["Age quality ranking Age Rank(0 - 5)"]
+            );
+            const evidenceRank = getValidNumber(
+                feature.properties["ACertainty of earthquake evidence Evidence Rank (0 - 3)"] ??
+                feature.properties["Certainty of earthquake evidence Evidence Rank(0 - 3)"]
+            );
+
+            if (siteEvidenceRank === null && ageRank === null && evidenceRank === null) {
+                return; // Skip this feature if all rank values are invalid
+            }
+
+            // Create key for site-evidenceType combination
+            const key = `${site}-${evidenceType}`;
+
+            if (!maxRanks[key]) {
+                maxRanks[key] = { maxEvidenceRank: 0, maxAgeRank: 0, maxSiteEvidenceRank: 0 };
+            }
+
+            // Update only if values are valid
+            if (evidenceRank !== null) maxRanks[key].maxEvidenceRank = Math.max(maxRanks[key].maxEvidenceRank, evidenceRank);
+            if (ageRank !== null) maxRanks[key].maxAgeRank = Math.max(maxRanks[key].maxAgeRank, ageRank);
+            if (siteEvidenceRank !== null) maxRanks[key].maxSiteEvidenceRank = Math.max(maxRanks[key].maxSiteEvidenceRank, siteEvidenceRank);
+        });
+
+        // Step 2: Filter and bin data based on max rank values
+        features.forEach(feature => {
+            const lat = feature.geometry.coordinates[1]; // Latitude from [lon, lat]
+
+            let site = feature.properties["Site"] || "Unknown"; // Site name
+            let contactName = feature.properties["Contact Name"] || "Unknown"; // Contact Name
+            let evidenceType = feature.properties["Evidence Type"] || "Unknown"; // Evidence Type
+
+            const key = `${site}-${evidenceType}`;
+
+            // Check if site meets filtering criteria
+            if (
+                maxRanks[key].maxEvidenceRank < minEvidenceRank ||
+                maxRanks[key].maxAgeRank < minAgeRank ||
+                maxRanks[key].maxSiteEvidenceRank < minSiteEvidenceRank
+            ) {
+                return; // Skip if the site-evidenceType fails filtering
+            }
+            let rawLength = feature.properties["Length of Record"] || "0";
+            let length = 0;
+            if (typeof rawLength === 'string') {
+                length = parseFloat(rawLength.replace(/[~<>]/g, "")) || 0;
+            } else if (typeof rawLength === 'number') {
+                length = rawLength;
+            } let increment = metric === "length" ? length : 1; // Increment based on metric
+
+            // ✅ Normalize contact name (remove lowercase suffixes and '?')
+            let normalizedContact = contactName.replace(/[a-z?]+$/, "");
+
+            for (let i = 0; i < bins.length - 1; i++) {
+                if (lat >= bins[i] && lat < bins[i + 1]) {
+                    const binMidpoint = (bins[i] + bins[i + 1]) / 2; // Use midpoint for Y-axis
+
+                    if (!binCounts[binMidpoint]) {
+                        binCounts[binMidpoint] = {};
+                    }
+                    if (!binCounts[binMidpoint][evidenceType]) {
+                        binCounts[binMidpoint][evidenceType] = {};
+                    }
+                    if (!binCounts[binMidpoint][evidenceType][site]) {
+                        binCounts[binMidpoint][evidenceType][site] = {
+                            total: 0,
+                            count: 0,
+                            totalCount: 0,
+                            uniqueContacts: new Set() // ✅ Track unique contacts
+                        };
+                    }
+
+                    // ✅ Only count contact if not already counted for this site
+                    if (!binCounts[binMidpoint][evidenceType][site].uniqueContacts.has(normalizedContact)) {
+                        binCounts[binMidpoint][evidenceType][site].uniqueContacts.add(normalizedContact);
+                        binCounts[binMidpoint][evidenceType][site].count += 1; // ✅ Count only unique contact names
+                    }
+
+                    if (metric === "length") { binCounts[binMidpoint][evidenceType][site].total = increment; } else {
+                        binCounts[binMidpoint][evidenceType][site].total += increment;
+                    }
+                    binCounts[binMidpoint][evidenceType][site].totalCount += 1;
+                    break;
+                }
+            }
+        });
+
+        return binCounts;
+    }
+
+    // Plot data with numeric y-axis using latitude midpoints
+    function plotData(selectedValues) {
+        const geojsonFetchPromises = [];
+        const bins = createLatitudeBins(south, north, 0.1); // Set interval to 0.1
+        const binData = {};
+        const evidenceTypes = new Set();
+        const metric = document.getElementById("xAxisSelector").value;
+
+        // Retrieve filter values
+        const latMin = parseFloat(document.getElementById("latMinSlider").value);
+        const latMax = parseFloat(document.getElementById("latMaxSlider").value);
+        const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
+        const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+
+        selectedValues.forEach(value => {
+            const geojsonUrl = GEOJSON_URLS[value];
+
+            const fetchPromise = fetch(geojsonUrl)
+                .then(response => response.json())
+                .then(geojson => {
+
+                    // **Next, Apply Latitude/Longitude Filtering**
+                    const spatiallyFilteredFeatures = geojson.features.filter(feature => {
+                        const lat = feature.geometry.coordinates[1];
+                        const lon = feature.geometry.coordinates[0];
+                        return lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax;
+                    });
+
+                    // Process filtered data
+                    const binCounts = computeDataByLatitudeBin(spatiallyFilteredFeatures, bins, metric);
+
+                    Object.keys(binCounts).forEach(binMidpoint => {
+                        if (!binData[binMidpoint]) {
+                            binData[binMidpoint] = {};
+                        }
+
+                        Object.keys(binCounts[binMidpoint]).forEach(evidenceType => {
+                            if (!binData[binMidpoint][evidenceType]) {
+                                binData[binMidpoint][evidenceType] = {};
+                            }
+
+                            binData[binMidpoint][evidenceType] = binCounts[binMidpoint][evidenceType];
+                            evidenceTypes.add(evidenceType);
+                        });
+                    });
+                });
+
+            geojsonFetchPromises.push(fetchPromise);
+        });
+
+        Promise.all(geojsonFetchPromises).then(() => {
+            const sortedBins = Object.keys(binData)
+                .map(parseFloat) // Convert to numbers for sorting
+                .sort((a, b) => b - a); // 🔥 Sort from highest latitude to lowest
+
+            if (sortedBins.length === 0) {
+                console.warn("No data available after filtering.");
+                alert("No data available within selected latitude/longitude range or rank filters.");
+                return;
+            }
+
+            const datasets = [];
+
+            evidenceTypes.forEach(evidenceType => {
+                sortedBins.forEach(binMidpoint => {
+                    Object.entries(binData[binMidpoint][evidenceType] || {}).forEach(([site, siteData]) => {
+                        let count = siteData.count;
+                        let total = siteData.total;
+                        let totalCount = siteData.totalCount;
+                        let avgLength = metric === "length" ? total : total;
+
+                        datasets.push({
+                            label: [`${evidenceType}`],
+                            data: [{ y: binMidpoint, x: avgLength, site: site }],
+                            backgroundColor: COLORS[evidenceType] || "#7F8C8D",
+                            borderColor: "black",
+                            borderWidth: 1,
+                            hoverBorderColor: "red",
+                            hoverBorderWidth: 8,
+                            siteData: [{
+                                site: site,
+                                value: avgLength,
+                                totalRecords: total,
+                                count: count,
+                                totalCount: totalCount
+                            }]
+                        });
+                    });
+                });
+            });
+
+            const infobox = document.getElementById("infobox");
+            infobox.innerHTML = "";
+
+            const canvas = document.createElement("canvas");
+            canvas.id = "latitudeChart";
+            canvas.style.width = "100%";
+            canvas.style.height = "900px";
+            infobox.appendChild(canvas);
+
+            const valueLabel = metric === "length" ? "Length of Record" : "Total Number of Events";
+            const xAxisTitle = valueLabel;
+
+            const minLatitude = parseFloat(document.getElementById("latMinSlider").value);
+            const maxLatitude = parseFloat(document.getElementById("latMaxSlider").value);
+
+            new Chart(canvas, {
+                type: "bar",
+                data: { datasets },
+                options: {
+                    indexAxis: "y",
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: { display: true, text: xAxisTitle },
+                            beginAtZero: true,
+                            stacked: true,
+                            barPercentage: 1.0,
+                            categoryPercentage: 0.9
+                        },
+                        y: {
+                            title: { display: true, text: "Latitude" },
+                            stacked: true,
+                            reverse: false,
+                            type: "linear",
+                            min: minLatitude,
+                            max: maxLatitude,
+                            ticks: {
+                                stepSize: 0.2,
+                                callback: value => value.toFixed(1)
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false, position: "bottom" },
+                        tooltip: {
+                            enabled: true,
+                            mode: "point",
+                            intersect: true,
+                            callbacks: {
+                                title: function (tooltipItems) {
+                                    let latitude = tooltipItems[0].label;
+                                    return `Latitude: ${latitude}`;
+                                },
+                                label: function (context) {
+                                    let dataset = context.dataset;
+                                    let site = dataset.siteData[context.dataIndex]?.site || "Unknown";
+                                    let value = context.raw.x;
+                                    let totalRecords = dataset.siteData[context.dataIndex]?.totalRecords || 0;
+                                    let totalCount = dataset.siteData[context.dataIndex]?.totalCount || 1;
+                                    let count = dataset.siteData[context.dataIndex]?.count || 1;
+
+                                    let displayValue = metric === "length"
+                                        ? `Length of Record: ${totalRecords.toFixed(1)}`
+                                        : `Events: ${count}`;
+
+                                    return [
+                                        `Evidence Type: ${dataset.label}`,
+                                        `Site: ${site}`,
+                                        displayValue
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    hover: {
+                        mode: "point",
+                        intersect: true
+                    },
+                    onClick: function (event, elements) {
+                        if (elements.length > 0) {
+                            const datasetIndex = elements[0].datasetIndex;
+                            const dataIndex = elements[0].index;
+                            const dataset = datasets[datasetIndex];
+                            const selectedSite = dataset.data[dataIndex]?.site;
+                            const evidenceType = dataset.label || "Unknown";
+
+                            if (selectedSite) {
+                                highlightMarkerOnMap([selectedSite], evidenceType);
+                            }
+                        }
+                    }
+                }
+            });
+
+        }).catch(error => console.error("Error plotting data:", error));
+    }
+
+    // 🔹 Ensure that rank filters trigger an update
+    document.getElementById("evidenceRankFilter").addEventListener("change", updateFilteredData);
+    document.getElementById("ageRankFilter").addEventListener("change", updateFilteredData);
+    document.getElementById("siteEvidenceRankFilter").addEventListener("change", updateFilteredData);
+
+    // 🔹 Ensure the chart updates when rank filters change
+    function updateFilteredData() {
+        const selectedValues = getSelectedDatasetValues();
+        plotData(selectedValues);
+    }
+
+    // Update the event listener for the Plot button
+    document.getElementById('plotButton').addEventListener('click', () => {
+        const selectedValues = getSelectedDatasetValues(); // Use the updated function
+        plotData(selectedValues);
+    });
+
+    window.onload = function () {
+        // Automatically plot all datasets on page load
+        const allDatasetValues = Object.keys(GEOJSON_URLS); // Assuming GEOJSON_URLS contains all dataset keys
+        plotData(allDatasetValues); // Pass all dataset values to the plot function
+    };
+
+
+</script>
+{% endblock %}

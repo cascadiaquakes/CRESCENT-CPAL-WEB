@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPAL Web</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/cpal.css" />
+
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="top-banner">
+
+            <div class="logo-container">
+                <a href="https://cascadiaquakes.org/" target="_blank" style="text-decoration: none;">
+                    <img src="/static/images/IMG_6459_NSF.png" alt="Logo" width="250px"> /a>
+                    <a href="https://cascadiaquakes.org/cpal" target="_blank" style="text-decoration: none;">
+                        <div class="working-group-name">&nbsp;&nbsp;Paleoseismology (CPAL)</div>
+                    </a>
+            </div>
+            </a>
+            <nav class="navbar">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">Repository</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Data<span class="chevron">&#9660;</span></a>
+                        <ul class="dropdown">
+                            <li><a href="/downloads">Download Datasets</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">More<span class="chevron">&#9660;</span></a>
+                        <ul class="dropdown">
+                            <li><a href="/news">CPAL-Web News</a></li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">About<span class="chevron">&#9654;</span></a>
+                                <ul class="dropdown">
+                                    <li><a href="https://cascadiaquakes.org/about-crescent/"
+                                            target="_blank">CRESCENT</a></li>
+                                    <li><a href="https://cascadiaquakes.org/cpal/" target="_blank">CPAL</a></li>
+                                    <li><a href="https://cascadiaquakes.org/cfm/" target="_blank">CFM</a></li>
+                                    <li><a href="https://cascadiaquakes.org/cvm/" target="_blank">CVM</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="/request" class="nav-link">Contact US</a></li>
+
+                </ul>
+            </nav>
+        </div>
+        <div class="description">
+            {% block description %}{% endblock %}
+        </div>
+        <div class="filter">
+            {% block filter %}{% endblock %}
+        </div>
+        <div class="left-right">
+            {% block leftpanel%}{% endblock %} {% block rightpanel%}{% endblock %} </div>
+        <div class="footer">
+            <!-- Footer content -->
+        </div>
+        {% block scripts %}{% endblock %}
+    </div>
+
+</body>
+
+</html>

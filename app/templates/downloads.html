@@ -1,0 +1,98 @@
+{% extends 'cpal_page.html' %}
+
+{% block style %}
+<link rel="stylesheet" href="/static/css/main.css" />
+<script>
+    // Unique flag only for this page
+    window.SKIP_CESIUM = { skip: true };
+</script>
+<script src="/static/config/config.js"></script>
+<style>
+    .description {
+        background-color: #fff;
+        padding: 10px 20px;
+    }
+
+    .download-group {
+        margin-bottom: 20px;
+    }
+
+    .download-group button {
+        margin-right: 10px;
+        background-color: #004F59;
+        color: white;
+        border-radius: 10px;
+        padding: 5px 12px;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block description %}
+<h2>CPAL Paleoseismic Proxies Download</h2>
+<p>
+    Below you can access CPAL paleoseismic proxy datasets in GeoJSON format along with their column description files.
+</p>
+
+<div id="downloads" class="description"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById("downloads");
+
+        const datasetNames = {
+            coastal: "Coastal Deformation",
+            marine: "Marine Shaking",
+            terrestrial: "Terrestrial Shaking",
+            tsunami: "Tsunami"
+        };
+
+        for (const key of Object.keys(GEOJSON_URLS)) {
+            const geojsonUrl = GEOJSON_URLS[key];
+            const descUrl = COLUMNS_DESCRIPTION[key];
+
+            const section = document.createElement("div");
+            section.className = "download-group";
+
+            const title = document.createElement("h4");
+            title.textContent = datasetNames[key];
+            section.appendChild(title);
+
+            // GeoJSON download button
+            const geoBtn = document.createElement("button");
+            geoBtn.textContent = "Download Dataset as a GeoJSON File";
+            geoBtn.onclick = () => triggerDownload(geojsonUrl);
+            section.appendChild(geoBtn);
+
+            // Column description download button
+            const descBtn = document.createElement("button");
+            descBtn.textContent = "Download Column Description as a JSON file";
+            descBtn.onclick = () => triggerDownload(descUrl);
+            section.appendChild(descBtn);
+
+            container.appendChild(section);
+        }
+
+        async function triggerDownload(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+                const filename = url.split('/').pop();
+
+                const a = document.createElement("a");
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                alert("Download failed: " + error.message);
+            }
+        }
+    });
+</script>
+{% endblock %}
