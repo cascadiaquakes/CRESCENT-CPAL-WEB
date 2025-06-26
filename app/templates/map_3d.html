@@ -337,7 +337,7 @@
                         id: "selectionOverlay",
                         rectangle: {
                             coordinates: Cesium.Rectangle.fromDegrees(lonMin, latMin, lonMax, latMax),
-                            material: new Cesium.Color(0.5, 0.5, 0.5, 0.3), // 🔹 Gray with 30% opacity
+                            material: new Cesium.Color(0.5, 0.5, 0.5, 0.5), // Gray with 50% opacity
                             outline: true,
                             outlineColor: Cesium.Color.WHITE,
                             outlineWidth: 2
@@ -936,7 +936,7 @@
 
             // Center view button functionality
             window.document.getElementById('centeredViewButton1').addEventListener('click', centeredView);
-            window.parent.document.getElementById('centeredViewButton').addEventListener('click', centeredView);
+            //window.parent.document.getElementById('centeredViewButton').addEventListener('click', centeredView);
 
 
             function centeredView() {
