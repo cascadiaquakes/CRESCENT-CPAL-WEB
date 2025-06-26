@@ -90,8 +90,10 @@
 </div>
 {% endblock %}
 {% block filter %}
-
-<div id="filterPanel" style="display:none;">
+<div id="toggleFilterPanel" onclick="toggleFilterPanel()" class="filterToggleBtn">
+    <span style="color: red;">&#9660;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls
+</div>
+<div id="filterPanel" style="display:block;">
     <div id="controlContainer">
 
         <div class="three-column-container">
@@ -104,15 +106,16 @@
                 <div class="sliderContainer" style="font-weight: bold; display:block;"></div>
                 <div style="margin-top: 10px;">
                     <label for="latRange">Latitude Range:</label>
-                    <input type="range" id="latMinSlider">
-                    <input type="range" id="latMaxSlider">
-                    <span id="latRangeValue" style="font-size: 9pt;"></span>
+                    <input type="number" id="latMinSlider" step="0.1" style="width: 80px;">°
+                    to
+                    <input type="number" id="latMaxSlider" step="0.1" style="width: 80px;">°
                 </div>
+
                 <div style="margin-top: 10px;">
                     <label for="lonRange">Longitude Range:</label>
-                    <input type="range" id="lonMinSlider">
-                    <input type="range" id="lonMaxSlider">
-                    <span id="lonRangeValue" style="font-size: 9pt;"></span>
+                    <input type="number" id="lonMinSlider" step="0.1" style="width: 80px;">°
+                    to
+                    <input type="number" id="lonMaxSlider" step="0.1" style="width: 80px;">°
                 </div>
             </div>
 
@@ -156,13 +159,11 @@
                 <h3>Plot:</h3>
 
                 <div>
-                    <label for="xAxisSelector">Chart's X-axis:</label>
+                    <label for="xAxisSelector">Chart Type:</label>
                     <select id="xAxisSelector">
                         <option value="events">Number of Events</option>
                         <option value="length">Length of Record</option>
                     </select>
-                    <div></div><button id="plotButton" style="margin-top: 10pt;">Plot Chart</button>
-                    <button id="centeredViewButton" style="margin-top: 10pt;">Home View</button>
                 </div>
                 <button id="downloadGeoJSON" style="width:51%;">Download Filtered Data\n(GeoJSON)</button>
 
@@ -173,7 +174,7 @@
                         The <strong>Interactive Latitude Chart</strong> allows you to visualize data
                         distributions
                         across latitude bins.
-                        You can customize the chart's X-axis to display either:
+                        You can customize the chart type to display either:
                     </p>
                     <ol>
                         <li>
@@ -190,14 +191,9 @@
                     <p>To interact with the chart:</p>
                     <ul>
                         <li>
-                            <strong>Select X-axis Metric:</strong> Use the dropdown menu to choose between
+                            <strong>Select chart type:</strong> Use the dropdown menu to choose between
                             "Number of
                             Events" or "Length of Record."
-                        </li>
-                        <li>
-                            <strong>Filter Data:</strong> Choose specific datasets or subsets from the dropdown
-                            menu to
-                            focus on particular data.
                         </li>
                         <li>
                             <strong>View Details:</strong> Hover over bars in the chart to view detailed data
@@ -209,7 +205,7 @@
                         The Y-axis represents latitude, with lower latitudes at the bottom and higher latitudes
                         at the
                         top.
-                        The X-axis dynamically adjusts based on the selected metric. Use this chart to gain
+                        The X-axis dynamically adjusts based on the selected chart type. Use this chart to gain
                         insights
                         into spatial distributions and data trends related to your selected datasets.
                     </p>
@@ -226,9 +222,6 @@
 {% endblock %}
 {% block leftpanel %}
 <div id="fileListPanel">
-    <div id="toggleFilterPanel" onclick="toggleFilterPanel()" class="filterToggleBtn">
-        <span style="color: red;">&#9654;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls
-    </div>
     <div>
         <div id="infobox"></div>
     </div>
@@ -251,58 +244,69 @@
 
     document.addEventListener("DOMContentLoaded", function () {
 
-        // Get slider elements
-        document.getElementById("latMinSlider").addEventListener("input", function () {
-            updateRangeDisplay();
-            updateFilteredData();
-        });
-        document.getElementById("latMaxSlider").addEventListener("input", function () {
-            updateRangeDisplay();
-            updateFilteredData();
-        });
-        document.getElementById("lonMinSlider").addEventListener("input", function () {
-            updateRangeDisplay();
-            updateFilteredData();
-        });
-        document.getElementById("lonMaxSlider").addEventListener("input", function () {
-            updateRangeDisplay();
-            updateFilteredData();
-        });
-
-        const latRangeValue = document.getElementById("latRangeValue");
-        const lonRangeValue = document.getElementById("lonRangeValue");
-
-        // Initialize sliders based on midpoints
+        // Latitude sliders
         latMinSlider.min = south;
-        latMinSlider.max = (south + north) / 2;
+        latMinSlider.max = north;
         latMinSlider.value = south;
 
-        latMaxSlider.min = (south + north) / 2;
+        latMaxSlider.min = south;
         latMaxSlider.max = north;
         latMaxSlider.value = north;
 
+        // Longitude sliders
         lonMinSlider.min = west;
-        lonMinSlider.max = (west + east) / 2;
+        lonMinSlider.max = east;
         lonMinSlider.value = west;
 
-        lonMaxSlider.min = (west + east) / 2;
+        lonMaxSlider.min = west;
         lonMaxSlider.max = east;
         lonMaxSlider.value = east;
 
-        // Function to update displayed range values
-        function updateRangeDisplay() {
-            latRangeValue.textContent = `(${latMinSlider.value}° to ${latMaxSlider.value}°)`;
-            lonRangeValue.textContent = `(${lonMinSlider.value}° to ${lonMaxSlider.value}°)`;
-        }
+        latMinSlider.addEventListener("change", () => {
+            let val = parseFloat(latMinSlider.value);
+            let val_max = parseFloat(latMaxSlider.value)
+            if (val < south) val = south;
+            if (val > val_max) {
+                val = val_max;
+            }
+            latMinSlider.value = val;
+            updateFilteredData();
+        });
 
-        // Listen for changes and update the displayed values
-        latMinSlider.addEventListener("input", updateRangeDisplay);
-        latMaxSlider.addEventListener("input", updateRangeDisplay);
-        lonMinSlider.addEventListener("input", updateRangeDisplay);
-        lonMaxSlider.addEventListener("input", updateRangeDisplay);
+        latMaxSlider.addEventListener("change", () => {
+            let val = parseFloat(latMaxSlider.value);
+            let val_min = parseFloat(latMinSlider.value);
+            if (val > north) val = north;
+            if (val < val_min) {
+                val = val_min;
+            }
+            latMaxSlider.value = val;
+            updateFilteredData();
+        });
 
-        // Initialize display on page load
-        updateRangeDisplay();
+        lonMinSlider.addEventListener("change", () => {
+            let val = parseFloat(lonMinSlider.value);
+            let val_max = parseFloat(lonMaxSlider.value)
+            if (val < west) val = west;
+            if (val > val_max) {
+                val = val_max;
+            }
+            lonMinSlider.value = val;
+            updateFilteredData();
+        });
+
+        lonMaxSlider.addEventListener("change", () => {
+            let val = parseFloat(lonMaxSlider.value);
+            let val_min = parseFloat(lonMinSlider.value);
+            if (val > east) val = east;
+            if (val < val_min) {
+                val = val_min;
+            }
+            lonMaxSlider.value = val;
+            updateFilteredData();
+        });
+
+
     });
 
 
@@ -321,7 +325,7 @@
             });
         }
 
-        function getFilteredGeoJSON(selectedValues) {
+        function getFilteredGeoJSON_pre(selectedValues) {
             let filteredFeatures = [];
 
             const latMin = parseFloat(document.getElementById("latMinSlider").value);
@@ -395,11 +399,11 @@
                 });
             }
 
-            // ✅ Call `getFilteredGeoJSON()` and handle the result
+            // Call `getFilteredGeoJSON()` and handle the result
             getFilteredGeoJSON().then(filteredGeoJSON => {
                 if (!filteredGeoJSON || !filteredGeoJSON.features || filteredGeoJSON.features.length === 0) {
                     console.warn("No data available for download.");
-                    alert("No filtered data available to download.");
+                    //alert("No filtered data available to download.");
                     return;
                 }
 
@@ -429,50 +433,12 @@
             });
         }
 
-        // ✅ Ensure button is properly connected
+        //  Ensure button is properly connected
         document.getElementById("downloadGeoJSON").addEventListener("click", downloadGeoJSON);
 
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-
-        function initializeSliders() {
-            if (typeof MAP_BOUNDS === "undefined") {
-                console.error("MAP_BOUNDS is not defined. Retrying in 100ms...");
-                setTimeout(initializeSliders, 100); // Retry in 100ms
-                return;
-            }
-
-            const latMinSlider = document.getElementById("latMinSlider");
-            const latMaxSlider = document.getElementById("latMaxSlider");
-            const lonMinSlider = document.getElementById("lonMinSlider");
-            const lonMaxSlider = document.getElementById("lonMaxSlider");
-
-            latMinSlider.min = MAP_BOUNDS.south;
-            latMinSlider.max = (MAP_BOUNDS.north + MAP_BOUNDS.south) / 2.0;
-            latMinSlider.value = MAP_BOUNDS.south;
-
-            latMaxSlider.min = (MAP_BOUNDS.south + MAP_BOUNDS.north) / 2.0;
-            latMaxSlider.max = MAP_BOUNDS.north;
-            latMaxSlider.value = MAP_BOUNDS.north;
-
-            lonMinSlider.min = MAP_BOUNDS.west;
-            lonMinSlider.max = (MAP_BOUNDS.east + MAP_BOUNDS.west) / 2.0;
-            lonMinSlider.value = MAP_BOUNDS.west;
-
-            lonMaxSlider.min = (MAP_BOUNDS.west + MAP_BOUNDS.east) / 2.0;
-            lonMaxSlider.max = MAP_BOUNDS.east;
-            lonMaxSlider.value = MAP_BOUNDS.east;
-
-            updateRangeText();
-            console.log("Sliders initialized with MAP_BOUNDS:", MAP_BOUNDS);
-        }
-
-        function updateRangeText() {
-            document.getElementById("latRangeValue").textContent = `(${latMinSlider.value}° to ${latMaxSlider.value}°)`;
-            document.getElementById("lonRangeValue").textContent = `(${lonMinSlider.value}° to ${lonMaxSlider.value}°)`;
-        }
-
         function updatePlot() {
             console.log("Updating graph and map...");
 
@@ -518,19 +484,90 @@
                 }, "*");
             }
         }
+        function initializeSliders() {
+            if (typeof MAP_BOUNDS === "undefined") {
+                console.error("MAP_BOUNDS is not defined. Retrying in 100ms...");
+                setTimeout(initializeSliders, 100); // Retry in 100ms
+                return;
+            }
+
+            const latMinSlider = document.getElementById("latMinSlider");
+            const latMaxSlider = document.getElementById("latMaxSlider");
+            const lonMinSlider = document.getElementById("lonMinSlider");
+            const lonMaxSlider = document.getElementById("lonMaxSlider");
+
+            // Latitude sliders
+            latMinSlider.min = south;
+            latMinSlider.max = north;
+            latMinSlider.value = south;
+
+            latMaxSlider.min = south;
+            latMaxSlider.max = north;
+            latMaxSlider.value = north;
+
+            // Longitude sliders
+            lonMinSlider.min = west;
+            lonMinSlider.max = east;
+            lonMinSlider.value = west;
+
+            lonMaxSlider.min = west;
+            lonMaxSlider.max = east;
+            lonMaxSlider.value = east;
+
+            latMinSlider.addEventListener("change", () => {
+                let val = parseFloat(latMinSlider.value);
+                let val_max = parseFloat(latMaxSlider.value)
+                if (val < south) val = south;
+                if (val > val_max) {
+                    val = val_max;
+                }
+                latMinSlider.value = val;
+                updatePlot();
+            });
+
+            latMaxSlider.addEventListener("change", () => {
+                let val = parseFloat(latMaxSlider.value);
+                let val_min = parseFloat(latMinSlider.value);
+                if (val > north) val = north;
+                if (val < val_min) {
+                    val = val_min;
+                }
+                latMaxSlider.value = val;
+                updatePlot();
+            });
+
+            lonMinSlider.addEventListener("change", () => {
+                let val = parseFloat(lonMinSlider.value);
+                let val_max = parseFloat(lonMaxSlider.value)
+                if (val < west) val = west;
+                if (val > val_max) {
+                    lonMaxSlider.value = val;
+                }
+                lonMinSlider.value = val;
+                updatePlot();
+            });
+
+            lonMaxSlider.addEventListener("change", () => {
+                let val = parseFloat(lonMaxSlider.value);
+                let val_min = parseFloat(lonMinSlider.value);
+                if (val > east) val = east;
+                if (val < val_min) {
+                    lonMinSlider.value = val;
+                }
+                lonMaxSlider.value = val;
+                updatePlot();
+            });
+
+            console.log("Sliders initialized with MAP_BOUNDS:", MAP_BOUNDS);
+        }
 
         document.getElementById("datasetContainer").addEventListener("change", updateFilteredData);
-
-        document.getElementById("latMinSlider").addEventListener("change", updatePlot);
-        document.getElementById("latMaxSlider").addEventListener("change", updatePlot);
-        document.getElementById("lonMinSlider").addEventListener("change", updatePlot);
-        document.getElementById("lonMaxSlider").addEventListener("change", updatePlot);
 
         // 🔹 Ensure the graph and map appear immediately on page load
         window.onload = function () {
             console.log("Initializing graph & map on page load...");
             initializeSliders();
-            updatePlot(); // ✅ Ensure both graph and map update on first load
+            updatePlot(); //  Ensure both graph and map update on first load
         };
     });
 
@@ -587,10 +624,10 @@
         var button = document.getElementById("toggleFilterPanel");
         if (filterPanel.style.display === "none") {
             filterPanel.style.display = "block";
-            button.innerHTML = '<span style="color:red;">&#9650;&nbsp;</span>Show / Hide Controls'// Up arrow
+            button.innerHTML = '<span style="color:red;">&#9660;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls'// Up arrow
         } else {
             filterPanel.style.display = "none";
-            button.innerHTML = '<span style="color:red;">&#9654;&nbsp;</span>Show / Hide Controls' // Side  arrow
+            button.innerHTML = '<span style="color:red;">&#9654;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls' // Side  arrow
         }
     }
 
@@ -931,7 +968,7 @@
     }
 
 
-    document.getElementById('plotButton').addEventListener('click', getSelectedDatasetValues());
+    document.getElementById('xAxisSelector').addEventListener('change', getSelectedDatasetValues());
 
     // Function to get selected dataset values from the datasetDropdown
     function getSelectedDatasetValues() {
@@ -1067,12 +1104,12 @@
                 feature.properties["Site-Averaged Evidence Rank(0 - 3)"]
             );
             const ageRank = getValidNumber(
-                feature.properties["Age quality ranking Age Rank (0 - 5)"] ??
-                feature.properties["Age quality ranking Age Rank(0 - 5)"]
+                feature.properties["Age Rank (0 - 5)"] ??
+                feature.properties["Age Rank(0 - 5)"]
             );
             const evidenceRank = getValidNumber(
-                feature.properties["ACertainty of earthquake evidence Evidence Rank (0 - 3)"] ??
-                feature.properties["Certainty of earthquake evidence Evidence Rank(0 - 3)"]
+                feature.properties["Evidence Rank (0 - 3)"] ??
+                feature.properties["Evidence Rank(0 - 3)"]
             );
 
             if (siteEvidenceRank === null && ageRank === null && evidenceRank === null) {
@@ -1118,7 +1155,7 @@
                 length = rawLength;
             } let increment = metric === "length" ? length : 1; // Increment based on metric
 
-            // ✅ Normalize contact name (remove lowercase suffixes and '?')
+            //  Normalize contact name (remove lowercase suffixes and '?')
             let normalizedContact = contactName.replace(/[a-z?]+$/, "");
 
             for (let i = 0; i < bins.length - 1; i++) {
@@ -1136,14 +1173,14 @@
                             total: 0,
                             count: 0,
                             totalCount: 0,
-                            uniqueContacts: new Set() // ✅ Track unique contacts
+                            uniqueContacts: new Set() //  Track unique contacts
                         };
                     }
 
-                    // ✅ Only count contact if not already counted for this site
+                    //  Only count contact if not already counted for this site
                     if (!binCounts[binMidpoint][evidenceType][site].uniqueContacts.has(normalizedContact)) {
                         binCounts[binMidpoint][evidenceType][site].uniqueContacts.add(normalizedContact);
-                        binCounts[binMidpoint][evidenceType][site].count += 1; // ✅ Count only unique contact names
+                        binCounts[binMidpoint][evidenceType][site].count += 1; //  Count only unique contact names
                     }
 
                     if (metric === "length") { binCounts[binMidpoint][evidenceType][site].total = increment; } else {
@@ -1171,6 +1208,12 @@
         const latMax = parseFloat(document.getElementById("latMaxSlider").value);
         const lonMin = parseFloat(document.getElementById("lonMinSlider").value);
         const lonMax = parseFloat(document.getElementById("lonMaxSlider").value);
+
+        // No data selected!
+        if (!selectedValues || selectedValues.length === 0) {
+            // Add a dummy resolved promise to enter .then block
+            geojsonFetchPromises.push(Promise.resolve());
+        }
 
         selectedValues.forEach(value => {
             const geojsonUrl = GEOJSON_URLS[value];
@@ -1209,17 +1252,21 @@
         });
 
         Promise.all(geojsonFetchPromises).then(() => {
+            // Only now should you compute binData-derived values
             const sortedBins = Object.keys(binData)
-                .map(parseFloat) // Convert to numbers for sorting
-                .sort((a, b) => b - a); // 🔥 Sort from highest latitude to lowest
+                .map(parseFloat)
+                .sort((a, b) => b - a);
 
-            if (sortedBins.length === 0) {
-                console.warn("No data available after filtering.");
-                alert("No data available within selected latitude/longitude range or rank filters.");
-                return;
-            }
+            console.log("binData at time of plotting:", binData);
 
-            const datasets = [];
+            // Defensive check again in case binData is empty
+            //if (sortedBins.length === 0 || Object.keys(binData).length === 0) {
+            //    console.warn("No data available after filtering.");
+            //alert("No data available within selected latitude/longitude range or rank filters.");
+            //    return;
+            //}
+
+            const datasets = []; // will be empty if no selectedValues
 
             evidenceTypes.forEach(evidenceType => {
                 sortedBins.forEach(binMidpoint => {
@@ -1261,8 +1308,16 @@
             const valueLabel = metric === "length" ? "Length of Record" : "Total Number of Events";
             const xAxisTitle = valueLabel;
 
-            const minLatitude = parseFloat(document.getElementById("latMinSlider").value);
-            const maxLatitude = parseFloat(document.getElementById("latMaxSlider").value);
+            const rawMinLatitude = parseFloat(document.getElementById("latMinSlider").value);
+            const rawMaxLatitude = parseFloat(document.getElementById("latMaxSlider").value);
+            const stepSize = 0.5;
+
+            // Round minLatitude down to nearest step
+            const minLatitude = Math.floor(rawMinLatitude / stepSize) * stepSize;
+
+            // Round maxLatitude up to nearest step
+            const maxLatitude = Math.ceil(rawMaxLatitude / stepSize) * stepSize;
+
 
             new Chart(canvas, {
                 type: "bar",
@@ -1277,7 +1332,12 @@
                             beginAtZero: true,
                             stacked: true,
                             barPercentage: 1.0,
-                            categoryPercentage: 0.9
+                            categoryPercentage: 0.9,
+                            grid: {
+                                border: {
+                                    display: true  // Ensure top border is rendered
+                                }
+                            }
                         },
                         y: {
                             title: { display: true, text: "Latitude" },
@@ -1287,8 +1347,13 @@
                             min: minLatitude,
                             max: maxLatitude,
                             ticks: {
-                                stepSize: 0.2,
+                                stepSize: stepSize,
                                 callback: value => value.toFixed(1)
+                            },
+                            grid: {
+                                border: {
+                                    display: true  // Ensure top border is rendered
+                                }
                             }
                         }
                     },
@@ -1358,8 +1423,8 @@
         plotData(selectedValues);
     }
 
-    // Update the event listener for the Plot button
-    document.getElementById('plotButton').addEventListener('click', () => {
+    // Update the event listener for the chart type
+    document.getElementById('xAxisSelector').addEventListener('change', () => {
         const selectedValues = getSelectedDatasetValues(); // Use the updated function
         plotData(selectedValues);
     });
