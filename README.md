@@ -1,6 +1,7 @@
 # CRESCENT CPAL-WEB
 
-**CPAL-WEB** is a web-based application for visualizing and interacting with site-based data prepared by the Paleoseismology Group of the Cascadia Region Earthquake Science Center ([CRESCENT](https://cascadiaquakes.org/about-crescent/)). The goal of this group is to study past earthquake events through geological evidence, enhancing our understanding of seismic hazards in the Cascadia Subduction Zone. This platform allows users to explore mapped sites, evidence types, and attributes collected by the Paleoseismology Group via a  dynamic interface powered by [CesiumJS](https://cesium.com/platform/cesiumjs/) maps and [FastAPI](https://fastapi.tiangolo.com/) web framework.
+**CPAL-WEB** is a web-based application for visualizing and interacting with site-based data prepared the Paleoseismology Group of the Cascadia Region Earthquake Science Center ([CRESCENT](https://cascadiaquakes.org/about-crescent/)) and the USGS Powell Center Working Group on [Cascadia Subduction Zone Earthquake Hazards](https://www.usgs.gov/centers/john-wesley-powell-center-for-analysis-and-synthesis/science/margin-wide-geological-and). The goal of this group is to study past earthquake events through geological evidence, enhancing our understanding of seismic hazards in the Cascadia Subduction Zone. This platform allows users to explore mapped sites, evidence types, and attributes collected by the Paleoseismology Group via a dynamic interface powered by [CesiumJS](https://cesium.com/platform/cesiumjs/) maps and [FastAPI](https://fastapi.tiangolo.com/) web framework. The full compilation files are available from the [USGS ScienceBase data release](https://doi.org/10.5066/P13OJQYW).
+
 
 ## Features
 
