@@ -41,6 +41,16 @@ To prepare data in this format, refer to the companion **CRESCENT-CPAL** reposit
 🔗 [CRESCENT-CPAL](https://github.com/cascadiaquakes/CRESCENT-CPAL)  
 This repository provides CPAL datasets, Excel parsing tools, and conversion scripts to generate compliant GeoJSON files.
 
+Raw data are available from Staisch, L.M., Witter, R.C., Watt, J.T., Grant, A.R., Walton, M.A., Brothers, D., Davis, E., Dura, C., Engelhart, S., Enkin, R., Garrison-Laney, C.E, Goldfinger, C., Hamilton, T., Hawkes, A., Hill, J.C., Hong, I.J., Jaffe, B.E., Kelsey, H., Lahusen, S.R, La Selle, S.M, Nelson, A.R, Nieminski, N.M, Padgett, J.S, Patton, J., Pearl, J.K, Pilarczyk, J., Sherrod, B., and Stanton, K., 2024, Compiled onshore and offshore paleoseismic data along the Cascadia Subduction zone: U.S. Geological Survey data release, [https://doi.org/10.5066/P13OJQYW](https://doi.org/10.5066/P13OJQYW).
+
 ## Contact
 
 For questions, feedback, or contributions, please visit the [Contact Us page](https://cpal.cascadiaquakes.org/request).
+
+## Disclaimers
+
+**USGS Data Disclaimer**:  
+Unless otherwise stated, all data, metadata, and related materials are considered to satisfy the quality standards relative to the purpose for which the data were collected. Although these data and associated metadata have been reviewed for accuracy and completeness and approved for release by the U.S. Geological Survey (USGS), no warranty expressed or implied is made regarding the display or utility of the data for other purposes, nor on all computer systems, nor shall the act of distribution constitute any such warranty.
+
+**USGS Nonendorsement Disclaimer**:  
+Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. Government.
