@@ -95,7 +95,7 @@ def create_error_image(message: str) -> BytesIO:
 
 
 @router.get("/map3d", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def map3d(request: Request):
     return templates.TemplateResponse("map_3d.html", {"request": request})
 
 

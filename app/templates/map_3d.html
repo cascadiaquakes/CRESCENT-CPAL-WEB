@@ -12,43 +12,23 @@
         // Unique flag only for this page
         window.SKIP_CESIUM = { skip: false };
     </script>
-    <!-- Load config.js synchronously 
-                     Synchronous XHR ensures loading order: The browser halts execution until config.js is fetched and executed, 
-                    ensuring that all variables are available. If config.js fails to load, a console error message will help diagnose issues.
-                    xhrs block the browser’s rendering and prevent the user from interacting with the page until the request completes. However, this
-                    pause shoud be brief.-->
+    <!-- Load config.js synchronously -->
     <script>
-        console.log("Starting the script ");// + Cesium.Ion.defaultAccessToken);
-        // Dynamically create and load the configuration script synchronously before loading other scripts
+        console.log("Starting the script ");
         let branch = "{{ branch }}";
         let configFilePath = `/static/config/${branch === "main" ? "" : branch + "/"}config.js`;
 
         if (branch !== "main") {
-            // alert("[WARN] Loading configuration from the branch: [" + branch + "]\n" + configFilePath);
+            // console.warn("[WARN] Loading configuration from branch:", branch, configFilePath);
         }
 
-        // Load config.js synchronously to ensure its variables are available before other scripts run
         let xhr = new XMLHttpRequest();
-        xhr.open('GET', configFilePath, false); // `false` makes the request synchronous
+        xhr.open('GET', configFilePath, false); // synchronous
         xhr.onload = function () {
             if (xhr.status === 200) {
                 let script = document.createElement('script');
                 script.text = xhr.responseText;
                 document.head.appendChild(script);
-
-                // Function to capitalize the branch name
-                function capitalizeBranchName(branch) {
-                    return branch.charAt(0).toUpperCase() + branch.slice(1);
-                }
-                // Dynamically update the page title if the branch is not "main"
-                if (branch !== "main") {
-                    let currentTitle = document.title;
-                    let domain = window.location.hostname;
-                    let capitalizedBranch = capitalizeBranchName(branch);
-                    document.title = `[${capitalizedBranch} - ${domain}] ${currentTitle}`;
-                    //alert("Page title updated to: " + document.title);
-
-                }
             } else {
                 console.error("Failed to load config.js");
             }
@@ -69,7 +49,6 @@
             background-color: #004F59;
             width: 100%;
             border-radius: 15px;
-            /* Adjust the value to make the corners more or less rounded */
         }
 
         #northArrow {
@@ -105,14 +84,11 @@
                 Highlights</button>
             <button style="background-color: #004F59; border-radius: 5px;color: white;" onclick="resetMarkers()">Group
                 Markers</button>
-            <!-- Marker spread adjustment -->
 
             <label for="spreadAdjustmentSlider" style="font-size:smaller;">Spread Offset:</label>
             <input type="range" id="spreadAdjustmentSlider" min="1" max="500" step="1" value="250" style="width: 25%;">
             <span id="spreadAdjustmentValue" style="font-size:smaller;">50</span>
-
         </div>
-
 
         <!-- Site Dropdown Menu -->
         <div>
@@ -123,8 +99,6 @@
         </div>
     </div>
 
-
-    </div>
     <div id="northArrow"></div>
     <div id="cesiumContainer"></div>
 
@@ -137,14 +111,14 @@
     <div id="fileTable" style="display:none;"><b>Selected Dataset(s):</b>
         <div id="datasetContainer" style="margin-top: 5pt;"></div>
         <div class="sliderContainer" style="font-weight: bold; display:none;"></div>
-        <div style="font-weight: bold; display:none;"> <!--flex; flex-direction: column; margin-bottom: 10px;">-->
+        <div style="font-weight: bold; display:none;">
             <label class="sliderLabel" for="gridOpacitySlider">Grid Opacity:</label>
             <input type="range" id="gridOpacitySlider" min="0" max="1" step="0.1" value="0.3">
             <span id="gridOpacityValue">0.3</span>
         </div>
         <button id="centeredViewButton" style="margin-top: 10pt;">View Home</button>
 
-        <!-- New controls for Marker Selection Radius and Spread Distance -->
+        <!-- Marker Spread Controls (hidden in iframe UI, but kept wired to logic) -->
         <div id="spreadControls" style="margin-top: 20px;">
             <div style="margin-bottom: 10px;">
                 <label for="spreadRadiusSlider" style="font-weight: bold;">Marker Selection Radius (meters):</label>
@@ -160,24 +134,15 @@
             </div>
         </div>
     </div>
+
     <script>
-
         let legendDone = false;
-        let datasetEntities = {}; // Store entities by dataset URL
-        let lastHighlightedMarker = null; // Track the last highlighted marker by clicking on a marker
-        let lastHighlightedBarMarkers = []; // Track the last highlighted marker by clicking on a bar segment
+        let lastHighlightedMarker = null;          // Highlighted marker from map click
+        let lastHighlightedBarMarkers = [];        // Highlighted markers from chart click
 
-        // See if document is inside an iframe. 
-        let hasParent = false
-        if (window.top !== window.self) { hasParent = true }
+        // Detect whether inside iframe
+        let hasParent = (window.top !== window.self);
 
-        /**
-         * Generates a formatted coordinate object for a given latitude, longitude, and label.
-         * @param {number} lat - The latitude coordinate.
-         * @param {number} lon - The longitude coordinate.
-         * @param {string} label - The label for the location.
-         * @returns {object} Formatted coordinate object with `lon`, `lat`, and `label` properties.
-         */
         function createFormattedCoordinate(lat, lon, label) {
             return {
                 lon: lon,
@@ -186,47 +151,41 @@
             };
         }
 
-        // Load the logo after the HTML is loaded.
+        // Logo injection
         document.addEventListener('DOMContentLoaded', function () {
-            // Select the image element by its ID
             const logoImage = document.getElementById('logo-image');
-
-            // Set the src attribute to the desired image URL
             logoImage.src = logoFile;
         });
 
-        let columnDescriptionsByProxy = {}; // Dictionary to store descriptions per proxy
+        let columnDescriptionsByProxy = {};
 
         async function loadColumnDescriptions() {
             const descriptionPromises = Object.keys(COLUMNS_DESCRIPTION).map(async (proxyKey) => {
-                const descriptionUrl = COLUMNS_DESCRIPTION[proxyKey]; // URL of the JSON file
+                const descriptionUrl = COLUMNS_DESCRIPTION[proxyKey];
                 try {
                     const response = await fetch(descriptionUrl);
                     if (!response.ok) {
                         throw new Error(`Failed to fetch column descriptions for ${proxyKey}`);
                     }
                     const jsonData = await response.json();
-                    columnDescriptionsByProxy[proxyKey] = jsonData; // Store data
+                    columnDescriptionsByProxy[proxyKey] = jsonData;
                 } catch (error) {
                     console.error(`Error loading column descriptions for ${proxyKey}:`, error);
-                    columnDescriptionsByProxy[proxyKey] = {}; // Store an empty dictionary on failure
+                    columnDescriptionsByProxy[proxyKey] = {};
                 }
             });
 
             await Promise.all(descriptionPromises);
         }
 
-        // Call function before loading GeoJSON data
         loadColumnDescriptions().then(() => {
             console.log("Column descriptions loaded:", columnDescriptionsByProxy);
         });
 
-
         document.addEventListener('DOMContentLoaded', function () {
-            // Initialize Cesium Viewer
             const arcGisImagery = Cesium.ArcGisMapServerImageryProvider.fromBasemapType(Cesium.ArcGisBaseMapType.SATELLITE);
 
-            console.log("Setting the viewer "); //+ Cesium.Ion.defaultAccessToken + " API Key: " + Cesium.ArcGisMapService.defaultAccessToken);
+            console.log("Setting the viewer");
 
             const viewer = new Cesium.Viewer('cesiumContainer', {
                 imageryProvider: arcGisImagery,
@@ -239,48 +198,43 @@
                 enableCollisionDetection: false,
                 navigationInstructionsInitiallyVisible: true,
                 baseLayer: Cesium.ImageryLayer.fromProviderAsync(arcGisImagery),
-                //baseLayer: Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3954)),
                 globe: new Cesium.Globe(Cesium.Ellipsoid.WGS84, {
                     minimumZoomDistance: 0.0
                 })
             });
+
             viewer.scene.backgroundColor = Cesium.Color.BLACK;
             viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-            viewer.scene.screenSpaceCameraController.enableCollisionDetection = false; // Prevents terrain locking
-            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1; // Allows closer zoom
-            viewer.scene.screenSpaceCameraController.maximumZoomDistance = 10000000; // Ensures far zooming is possible
+            viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
+            viewer.scene.screenSpaceCameraController.maximumZoomDistance = 10000000;
+
             const canvas = viewer.canvas;
-            const originalPositions = new Map(); // Store original positions of markers
-            const spreadLines = []; // Store polylines for visualizing spread markers
-            const originalMarkers = []; // Store small markers at original positions
-            let markersSpread = false; // Toggle state for spreading/regrouping
+            const originalPositions = new Map();
+            const spreadLines = [];
+            const originalMarkers = [];
+            let markersSpread = false;
             let ranks = {
                 "Site-Averaged Evidence Rank (0 - 3)": 0,
                 "Age Rank (0 - 5)": 0,
                 "Evidence Rank (0 - 3)": 0
             };
 
-
+            // Messages from parent: filter markers + selection rectangle
             window.addEventListener("message", function (event) {
                 if (event.data.action === "updateMarkers") {
                     console.log("Received updateMarkers message:", event.data);
 
                     const { latMin, latMax, lonMin, lonMax, minEvidenceRank, minAgeRank, minSiteEvidenceRank } = event.data;
 
-                    // Store rank values in the `ranks` object
                     ranks["Site-Averaged Evidence Rank (0 - 3)"] = minSiteEvidenceRank;
                     ranks["Age Rank (0 - 5)"] = minAgeRank;
                     ranks["Evidence Rank (0 - 3)"] = minEvidenceRank;
 
-                    // Properly log the `ranks` object
                     console.log("Ranks:", ranks);
-                    DisplayMarkerByRank(latMin, latMax, lonMin, lonMax)
-
+                    DisplayMarkerByRank(latMin, latMax, lonMin, lonMax);
                 }
             });
-
-
-
 
             window.addEventListener("message", function (event) {
                 let selectionOverlay;
@@ -295,9 +249,6 @@
                 console.log(`Received message: ${event.data.action}`);
 
                 if (event.data.action === "updateMapBounds") {
-                    const { latMin, latMax, lonMin, lonMax, minEvidenceRank, minAgeRank, minSiteEvidenceRank } = event.data;
-
-                    // 🔹 Filter markers based on lat/lon range
                     function filterMarkersByBounds(latMin, latMax, lonMin, lonMax) {
                         viewer.entities.values.forEach(entity => {
                             if (entity.position) {
@@ -309,35 +260,25 @@
                             }
                         });
                     }
-
                     filterMarkersByBounds(latMin, latMax, lonMin, lonMax);
-
                 }
 
                 if (event.data.action === "updateSelectionOverlay") {
-                    const { latMin, latMax, lonMin, lonMax, minEvidenceRank, minAgeRank, minSiteEvidenceRank } = event.data;
+                    const { latMin, latMax, lonMin, lonMax } = event.data;
 
                     console.log(`Updating selection overlay for lat/lon bounds: Latitude: ${latMin}° to ${latMax}°, Longitude: ${lonMin}° to ${lonMax}°`);
 
-                    // 🔹 Convert lat/lon to radians for Cesium
-                    const west = Cesium.Math.toRadians(lonMin);
-                    const east = Cesium.Math.toRadians(lonMax);
-                    const south = Cesium.Math.toRadians(latMin);
-                    const north = Cesium.Math.toRadians(latMax);
-
-                    // 🔹 Remove existing overlay if it exists
                     const existingOverlay = viewer.entities.getById("selectionOverlay");
                     if (existingOverlay) {
                         console.log("Removing existing overlay...");
                         viewer.entities.remove(existingOverlay);
                     }
 
-                    // 🔹 Add a new overlay
                     selectionOverlay = viewer.entities.add({
                         id: "selectionOverlay",
                         rectangle: {
                             coordinates: Cesium.Rectangle.fromDegrees(lonMin, latMin, lonMax, latMax),
-                            material: new Cesium.Color(0.5, 0.5, 0.5, 0.5), // Gray with 50% opacity
+                            material: new Cesium.Color(0.5, 0.5, 0.5, 0.5),
                             outline: true,
                             outlineColor: Cesium.Color.WHITE,
                             outlineWidth: 2
@@ -346,32 +287,24 @@
 
                     console.log("New selection overlay added.");
                 }
-
-
             });
 
-
-
             const siteDropdown = document.getElementById('siteSelectionDropdown');
-            const siteLocations = new Map(); // Store unique site names and their coordinates
+            const siteLocations = new Map();
 
             function populateDropdown() {
-                siteDropdown.innerHTML = ""; // Clear existing options
+                siteDropdown.innerHTML = "";
 
-                // Add the default "Select a site..." option
                 const defaultOption = document.createElement("option");
                 defaultOption.value = "home";
                 defaultOption.textContent = "Select a site...";
                 siteDropdown.appendChild(defaultOption);
 
-                // Convert siteLocations Map to array of [siteName, {lat, lon, evidenceType}]
                 const siteArray = Array.from(siteLocations.entries())
-                    .filter(([_, coords]) => coords.evidenceType !== "Fragile Geologic Features"); // ❌ Exclude these
+                    .filter(([_, coords]) => coords.evidenceType !== "Fragile Geologic Features");
 
-                // Sort by increasing latitude
                 siteArray.sort((a, b) => b[1].lat - a[1].lat);
 
-                // Populate dropdown with sorted site names and formatted label
                 siteArray.forEach(([siteName, coords]) => {
                     const option = document.createElement("option");
                     const latLabel = coords.lat.toFixed(2);
@@ -380,10 +313,9 @@
                     siteDropdown.appendChild(option);
                 });
 
-                // Add event listener to handle the home view selection
                 siteDropdown.addEventListener("change", function () {
                     if (this.value === "home") {
-                        centeredView(); // Call centeredView() when "Select a site..." is chosen
+                        centeredView();
                     }
                 });
             }
@@ -391,21 +323,19 @@
             function clearSiteInfo() {
                 const infoContainer = document.getElementById("datasetContainer");
                 if (infoContainer) {
-                    infoContainer.innerHTML = ""; // Clear existing content
+                    infoContainer.innerHTML = "";
                 }
             }
 
-
-            // Function to zoom to the selected site
             function zoomToSite(siteName) {
                 if (!siteLocations.has(siteName)) return;
 
                 const { lon, lat } = siteLocations.get(siteName);
                 viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 10000), // Adjust height as needed
+                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 10000),
                     orientation: {
                         heading: 0.0,
-                        pitch: Cesium.Math.toRadians(-90.0), // Looking straight down
+                        pitch: Cesium.Math.toRadians(-90.0),
                         roll: 0.0
                     }
                 });
@@ -414,7 +344,6 @@
             function simulateMarkerClick(marker) {
                 if (!marker || !marker.position) return;
 
-                // Convert marker position to screen coordinates
                 const position = marker.position.getValue(Cesium.JulianDate.now());
                 const screenSpacePosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, position);
 
@@ -423,7 +352,6 @@
                         position: new Cesium.Cartesian2(screenSpacePosition.x, screenSpacePosition.y)
                     };
 
-                    // Get the current left-click handler
                     const clickHandler = viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
                     if (clickHandler) {
@@ -434,39 +362,18 @@
                 }
             }
 
-
-            // Event listener for dropdown selection change
             siteDropdown.addEventListener("change", function () {
                 const selectedSite = siteDropdown.value;
                 if (selectedSite) {
-                    clearHighlight(); // Ensure previous selections are cleared
+                    clearHighlight();
                     resetMarkers();
                     zoomToSite(selectedSite);
-
-                    // Highlight the new selection
                     highlightMarkerBySiteName([selectedSite], null);
-
-                    // Wait briefly, then trigger the marker click event
-                    /*
-                    setTimeout(() => {
-                        if (lastHighlightedBarMarkers.length > 0) {
-                            const firstMarker = lastHighlightedBarMarkers[0];
-
-                            // Ensure previous info is cleared before loading new info
-                            clearSiteInfo();
-
-                            // Simulate the marker click
-                            simulateMarkerClick(firstMarker);
-                        }
-                    }, 500);
-                    */
                 }
             });
 
-
-            // Load GeoJSON and extract unique site names
             PROXIES.forEach((proxyKey) => {
-                console.log("Loading GeoJSON and extracting unique site names from ", proxyKey)
+                console.log("Loading GeoJSON and extracting unique site names from ", proxyKey);
                 const geojsonUrl = GEOJSON_URLS[proxyKey];
 
                 Cesium.GeoJsonDataSource.load(geojsonUrl, { clampToGround: true }).then((dataSource) => {
@@ -474,47 +381,46 @@
                         if (entity.properties && entity.position) {
                             const siteName = entity.properties["Site"]?.getValue() || "Unknown Site";
                             const evidenceType = entity.properties["Evidence Type"]?.getValue() || "Unknown Evidence Type";
-                            const siteKey = [siteName, evidenceType].join(": ")
+                            const siteKey = [siteName, evidenceType].join(": ");
                             const position = entity.position.getValue(Cesium.JulianDate.now());
                             const cartographic = Cesium.Cartographic.fromCartesian(position);
                             const lat = Cesium.Math.toDegrees(cartographic.latitude);
                             const lon = Cesium.Math.toDegrees(cartographic.longitude);
 
-                            // Store unique sites
                             if (!siteLocations.has(siteKey)) {
                                 siteLocations.set(siteKey, { lat, lon, siteName, evidenceType });
                             }
                         }
                     });
-                    populateDropdown(); // Populate dropdown after loading data
+                    populateDropdown();
                 }).catch(console.error);
             });
 
-
-            // Initialize variables directly from slider values
-            let spreadRadius = parseInt(document.getElementById("spreadRadiusSlider").value, 10); // Default Marker Selection Radius in meters
-            let spreadCircleRadius = parseInt(document.getElementById("spreadCircleRadiusSlider").value, 10); // Default Spread Distance in meters
+            let spreadRadius = parseInt(document.getElementById("spreadRadiusSlider").value, 10);
+            let spreadCircleRadius = parseInt(document.getElementById("spreadCircleRadiusSlider").value, 10);
 
             window.addEventListener("message", function (event) {
-
                 if (event.data.action === "highlightMarker") {
                     const siteNames = event.data.sites;
                     const evidenceType = event.data.evidence;
-                    highlightMarkerBySiteName(siteNames, evidenceType)
-                    // Function to zoom to the selected site
+                    highlightMarkerBySiteName(siteNames, evidenceType);
 
+                    const firstKey = siteNames[0];
+                    const location = Array.from(siteLocations.entries()).find(([key]) => key.startsWith(firstKey));
+                    if (location) {
+                        const { lon, lat } = location[1];
+                        viewer.camera.flyTo({
+                            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 10000),
+                            orientation: {
+                                heading: 0.0,
+                                pitch: Cesium.Math.toRadians(-90.0),
+                                roll: 0.0
+                            }
+                        });
+                    }
 
-                    const { lon, lat, _evidenceType } = siteLocations.get(siteNames[0]);
-                    viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(lon, lat, 10000), // Adjust height as needed
-                        orientation: {
-                            heading: 0.0,
-                            pitch: Cesium.Math.toRadians(-90.0), // Looking straight down
-                            roll: 0.0
-                        }
-                    });
                     const firstMarker = lastHighlightedBarMarkers[0];
-                    simulateMarkerClick(firstMarker)
+                    simulateMarkerClick(firstMarker);
                 }
             }, false);
 
@@ -522,55 +428,52 @@
                 viewer.entities.values.forEach(marker => {
                     if (!Array.isArray(marker.customProperties) || marker.customProperties.length === 0) {
                         marker.show = false;
-                        return; // No logging if it's not "WB-O-Y"
+                        return;
                     }
 
-                    let contactName = marker.customProperties[0]["Contact Name"] || "Unknown"; // Default to "Unknown" if missing
+                    let contactName = marker.customProperties[0]["Contact Name"] || "Unknown";
+                    let passesAllRanks = true;
 
-                    let passesAllRanks = true; // Assume the marker passes all rank conditions
+                    const enableLogging = false;
 
-                    // ✅ Only log if Contact Name is "WB-O-Y"
-                    let enableLogging = false; //(contactName === "WB-O-Y");
-
-                    if (enableLogging) console.log(`🔍 Checking Marker: ${contactName}`);
+                    if (enableLogging) console.log(`Checking Marker: ${contactName}`);
 
                     for (let rankKey in ranks) {
-                        let rankPassed = false; // Assume this rank fails initially
+                        let rankPassed = false;
 
-                        if (enableLogging) console.log(`   ➡️ Checking Rank: "${rankKey}" (Required: ${ranks[rankKey]})`);
+                        if (enableLogging) console.log(`   Checking Rank: "${rankKey}" (Required: ${ranks[rankKey]})`);
 
                         for (let i = 0; i < marker.customProperties.length; i++) {
                             let item = marker.customProperties[i];
                             let value = item[rankKey];
 
                             if (value !== undefined) {
-                                if (enableLogging) console.log(`      🔹 Checking ${rankKey} in customProperties[${i}]: ${value}`);
+                                if (enableLogging) console.log(`      ${rankKey} in customProperties[${i}]: ${value}`);
 
                                 if (value >= ranks[rankKey]) {
-                                    rankPassed = true; // Rank condition is met
-                                    if (enableLogging) console.log(`      ✅ Pass (customProperties[${i}] meets requirement)`);
-                                    break; // No need to check further for this rank
+                                    rankPassed = true;
+                                    if (enableLogging) console.log(`      Pass`);
+                                    break;
                                 }
-                            } else {
-                                if (enableLogging) console.log(`      ⚠️ Missing value for "${rankKey}" in customProperties[${i}]`);
+                            } else if (enableLogging) {
+                                console.log(`      Missing value for "${rankKey}" in customProperties[${i}]`);
                             }
                         }
 
                         if (!rankPassed) {
                             passesAllRanks = false;
-                            if (enableLogging) console.log(`   ❌ Marker ${contactName} FAILED on rank: "${rankKey}"`);
-                            break; // Stop checking further since the marker already failed
+                            if (enableLogging) console.log(`   Marker ${contactName} FAILED on rank: "${rankKey}"`);
+                            break;
                         }
                     }
+
                     const cartographic = Cesium.Cartographic.fromCartesian(marker.position._value);
                     const lat = Cesium.Math.toDegrees(cartographic.latitude);
                     const lon = Cesium.Math.toDegrees(cartographic.longitude);
                     const inArea = (lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax);
                     marker.show = passesAllRanks && inArea;
-                    if (enableLogging) console.log(`🎯 Marker ${contactName} visibility: ${marker.show ? "✅ Shown" : "🚫 Hidden"}`);
                 });
             }
-
 
             function highlightMarkerBySiteName(siteNames, evidenceType) {
                 if (!siteNames || siteNames.length === 0) return;
@@ -582,54 +485,46 @@
                         const site = marker.customProperties[0]?.Site || "Unknown";
                         const evidence = marker.customProperties[0]?.["Evidence Type"] || "Unknown";
 
-                        // If evidenceType is null, match only by site name
-                        if (siteNames.includes(site) && (evidenceType === null || evidenceType === undefined || evidenceType == evidence)) {
+                        if (siteNames.includes(site) && (evidenceType == null || evidenceType == evidence)) {
                             foundMarkers.push(marker);
                         }
                     }
                 });
 
                 if (foundMarkers.length > 0) {
-                    // Reset previous highlighted markers
                     if (lastHighlightedBarMarkers.length > 0) {
                         lastHighlightedBarMarkers.forEach(marker => {
                             marker.billboard.scale = 1.0;
                             marker.billboard.color = Cesium.Color.WHITE;
                         });
-                        lastHighlightedBarMarkers = []; // Clear previous highlights
+                        lastHighlightedBarMarkers = [];
                     }
-                    // Highlight new markers
+
                     foundMarkers.forEach(marker => {
                         marker.billboard.scale = 2.0;
-                        marker.billboard.color = Cesium.Color.BLACK; //.withAlpha(0.6);
+                        marker.billboard.color = Cesium.Color.BLACK;
                         marker.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
                     });
 
-                    // Store highlighted markers
                     lastHighlightedBarMarkers = foundMarkers;
                 } else {
                     console.warn("No markers found for sites:", siteNames, "with evidence types:", evidenceType);
                 }
             }
 
-
-
-            // Add event listeners for sliders to dynamically update the variables
             document.getElementById("spreadRadiusSlider").addEventListener("input", (event) => {
-                spreadRadius = parseInt(event.target.value, 10); // Update spread radius
+                spreadRadius = parseInt(event.target.value, 10);
                 document.getElementById("spreadRadiusValue").textContent = spreadRadius;
             });
 
             document.getElementById("spreadCircleRadiusSlider").addEventListener("input", (event) => {
-                spreadCircleRadius = parseInt(event.target.value, 10); // Update spread circle radius
+                spreadCircleRadius = parseInt(event.target.value, 10);
                 document.getElementById("spreadCircleRadiusValue").textContent = spreadCircleRadius;
             });
 
-            // Right-click handler for spreading or regrouping markers
             canvas.addEventListener("contextmenu", (event) => {
-                event.preventDefault(); // Prevent default right-click menu
+                event.preventDefault();
 
-                // Get the click position on the globe
                 const clickPosition = viewer.camera.pickEllipsoid(
                     new Cesium.Cartesian2(event.clientX, event.clientY),
                     viewer.scene.globe.ellipsoid
@@ -639,11 +534,11 @@
                     const closeMarkers = getMarkersWithinRadius(clickPosition, spreadRadius);
                     if (closeMarkers.length > 0) {
                         if (!markersSpread) {
-                            spreadMarkers(closeMarkers); // Spread overlapping markers
-                            markersSpread = true; // Mark as spread
+                            spreadMarkers(closeMarkers);
+                            markersSpread = true;
                         } else {
-                            resetMarkers(); // Regroup markers
-                            markersSpread = false; // Mark as grouped
+                            resetMarkers();
+                            markersSpread = false;
                         }
                     }
                 } else {
@@ -651,7 +546,6 @@
                 }
             });
 
-            // Function to get markers within a radius from a position
             function getMarkersWithinRadius(centerPosition, radius) {
                 const closeMarkers = [];
                 viewer.entities.values.forEach((entity) => {
@@ -667,16 +561,14 @@
                 return closeMarkers;
             }
 
-            // Function to spread markers and add visuals
             function spreadMarkers(pickedObjects) {
                 pickedObjects.forEach((pickedObject, index) => {
                     if (Cesium.defined(pickedObject.position)) {
                         const originalPosition = pickedObject.position.getValue(Cesium.JulianDate.now());
                         if (!originalPositions.has(pickedObject.id)) {
-                            originalPositions.set(pickedObject.id, originalPosition); // Save original position
+                            originalPositions.set(pickedObject.id, originalPosition);
                         }
 
-                        // Compute spread offsets
                         const angle = (2 * Math.PI * index) / pickedObjects.length;
                         const cartographic = Cesium.Cartographic.fromCartesian(originalPosition);
                         const radiusInDegrees = spreadCircleRadius / (111320 * Math.cos(cartographic.latitude));
@@ -684,102 +576,57 @@
                         const offsetLon = cartographic.longitude + radiusInDegrees * Math.cos(angle);
                         const newPosition = Cesium.Cartesian3.fromRadians(offsetLon, offsetLat, cartographic.height);
 
-                        // Apply new position
                         pickedObject.position = newPosition;
 
-                        // Draw an arrow pointing to the original position
-                        const lineEntity = viewer.entities.add({
-                            polyline: {
-                                positions: [newPosition, originalPosition],
-                                width: 2,
-                                material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.WHITE),
-                                clampToGround: false, // Prevents clamping issues
-                                depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty({ // Ensures visibility when close
-                                    color: Cesium.Color.WHITE,
-                                    outlineWidth: 1,
-                                    outlineColor: Cesium.Color.BLACK
-                                }),
-                                disableDepthTestDistance: Number.POSITIVE_INFINITY, // Ensures visibility at all zoom levels
-                            }
-                        });
-                        // Reapply depthTestAgainstTerrain to ensure it stays disabled
-                        viewer.scene.globe.depthTestAgainstTerrain = false;
-                        spreadLines.push(lineEntity); // Store for later removal
-                    }
-                });
-            }
-
-            // Reference the new slider
-            const spreadAdjustmentSlider = document.getElementById("spreadAdjustmentSlider");
-            const spreadAdjustmentValue = document.getElementById("spreadAdjustmentValue");
-
-            spreadAdjustmentSlider.addEventListener("input", (event) => {
-                spreadCircleRadius = parseInt(event.target.value, 10); // Update spread circle radius
-                spreadAdjustmentValue.textContent = spreadCircleRadius; // Display updated value
-
-            });
-
-            // Function to adjust the spread dynamically
-            function adjustSpreadMarkers() {
-                spreadLines.forEach(line => viewer.entities.remove(line)); // Remove old lines
-                spreadLines.length = 0; // Clear the stored lines
-
-                originalPositions.forEach((originalPosition, markerId) => {
-                    const marker = viewer.entities.getById(markerId);
-                    if (marker) {
-                        const cartographic = Cesium.Cartographic.fromCartesian(originalPosition);
-                        const index = [...originalPositions.keys()].indexOf(markerId);
-                        const angle = (2 * Math.PI * index) / originalPositions.size;
-
-                        // Convert spreadCircleRadius (meters) to degrees
-                        const radiusInDegrees = spreadCircleRadius / (111320 * Math.cos(cartographic.latitude));
-                        const offsetLat = cartographic.latitude + radiusInDegrees * Math.sin(angle);
-                        const offsetLon = cartographic.longitude + radiusInDegrees * Math.cos(angle);
-                        const newPosition = Cesium.Cartesian3.fromRadians(offsetLon, offsetLat, cartographic.height);
-
-                        // Update marker position
-                        marker.position = newPosition;
-
-                        // Redraw the connecting line
                         const lineEntity = viewer.entities.add({
                             polyline: {
                                 positions: [newPosition, originalPosition],
                                 width: 2,
                                 material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.WHITE),
                                 clampToGround: false,
-                                disableDepthTestDistance: Number.POSITIVE_INFINITY, // Keeps lines visible at all zoom levels
+                                depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty({
+                                    color: Cesium.Color.WHITE,
+                                    outlineWidth: 1,
+                                    outlineColor: Cesium.Color.BLACK
+                                }),
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY
                             }
                         });
-                        spreadLines.push(lineEntity); // Store new line
+
+                        viewer.scene.globe.depthTestAgainstTerrain = false;
+                        spreadLines.push(lineEntity);
                     }
                 });
-
-                // Reapply depthTestAgainstTerrain to ensure it stays disabled
-                viewer.scene.globe.depthTestAgainstTerrain = false;
             }
 
+            const spreadAdjustmentSlider = document.getElementById("spreadAdjustmentSlider");
+            const spreadAdjustmentValue = document.getElementById("spreadAdjustmentValue");
+
+            spreadAdjustmentSlider.addEventListener("input", (event) => {
+                spreadCircleRadius = parseInt(event.target.value, 10);
+                spreadAdjustmentValue.textContent = spreadCircleRadius;
+            });
+
             window.resetMarkers = function () {
-                // Reset all markers to their original positions
                 viewer.entities.values.forEach((entity) => {
                     if (originalPositions.has(entity.id)) {
-                        entity.position = originalPositions.get(entity.id); // Restore original position
+                        entity.position = originalPositions.get(entity.id);
                     }
                 });
 
-                // Clear stored positions since we're resetting
                 originalPositions.clear();
 
-                // ✅ Remove all spread lines
                 spreadLines.forEach((line) => {
                     viewer.entities.remove(line);
                 });
-                spreadLines.length = 0; // Clear the spreadLines array to avoid leftover references
-                // Reapply depthTestAgainstTerrain to ensure it stays disabled
+                spreadLines.length = 0;
+
                 viewer.scene.globe.depthTestAgainstTerrain = false;
                 console.log("Markers reset and spread lines removed.");
             };
+
             function getProxyTypeString(proxyKeyLocal) {
-                if (!proxyKeyLocal in PROXY_TYPES) {
+                if (!(proxyKeyLocal in PROXY_TYPES)) {
                     return "Invalid proxy: " + proxyKeyLocal;
                 }
 
@@ -787,33 +634,25 @@
                 return `${values.join(', ')}`;
             }
 
-            // Add grid lines to the study area.
-
-            // Get the grid slider elements
             const gridOpacitySlider = document.getElementById('gridOpacitySlider');
             const gridOpacityValue = document.getElementById('gridOpacityValue');
+            let gridOpacity = parseFloat(gridOpacitySlider.value);
 
-            // Update the grid transparency when the slider is moved
             gridOpacitySlider.addEventListener('input', function () {
-                gridOpacity = parseFloat(gridOpacitySlider.value); // Update transparency value
-                gridOpacityValue.textContent = gridOpacity; // Display the value
-
-                // Redraw the grid lines with the updated transparency
+                gridOpacity = parseFloat(gridOpacitySlider.value);
+                gridOpacityValue.textContent = gridOpacity;
                 addGridLines(MAP_BOUNDS.west, MAP_BOUNDS.east, MAP_BOUNDS.south, MAP_BOUNDS.north);
             });
 
-            // Draw grid lines.
             function addGridLines(west, east, south, north) {
-                const gridLineWidth = 0.5; // Line width for grid lines
+                const gridLineWidth = 0.5;
 
-                // Remove any existing grid lines before adding new ones
                 viewer.entities.values.forEach(entity => {
                     if (entity.name === "gridLine") {
                         viewer.entities.remove(entity);
                     }
                 });
 
-                // Draw vertical lines (longitude lines)
                 for (let lon = Math.ceil(west); lon <= Math.floor(east); lon++) {
                     const lonPositions = Cesium.Cartesian3.fromDegreesArray([
                         lon, south,
@@ -829,7 +668,6 @@
                     });
                 }
 
-                // Draw horizontal lines (latitude lines)
                 for (let lat = Math.ceil(south); lat <= Math.floor(north); lat++) {
                     const latPositions = Cesium.Cartesian3.fromDegreesArray([
                         west, lat,
@@ -847,52 +685,41 @@
                 }
             }
 
-
-            // Call the function to add grid lines
             addGridLines(MAP_BOUNDS.west, MAP_BOUNDS.east, MAP_BOUNDS.south, MAP_BOUNDS.north);
 
-            // Add a multiselect dropdown for the dataset
-            const datasetContainer = window.parent.document.getElementById('datasetContainer');
+            // --- Dataset dropdown in parent ---
 
-            // Create the dropdown menu
+            const datasetContainer = window.parent.document.getElementById('datasetContainer');
             const dropdown = document.createElement('select');
             dropdown.id = 'datasetDropdown';
-            dropdown.multiple = true; // Allow multiple selections
+            dropdown.multiple = true;
             dropdown.style.width = '100%';
             datasetContainer.appendChild(dropdown);
 
-            // Populate the dropdown menu with items from GEOJSON_NAMES
             PROXIES.forEach((proxyKey2) => {
-                const nameKey = GEOJSON_NAMES[proxyKey2];
                 const option = document.createElement('option');
-                option.value = proxyKey2; // Use index as value for easier lookup
+                option.value = proxyKey2;
                 option.textContent = getProxyTypeString(proxyKey2);
-                option.selected = true; // Select all items by default
+                option.selected = true;
                 dropdown.appendChild(option);
             });
 
-            // Function to update marker visibility based on dropdown selection
             function updateMarkerVisibility() {
                 const selectedOptions = Array.from(dropdown.selectedOptions).map(option => option.value);
                 viewer.entities.values.forEach(entity => {
-                    if (entity.customDatasetIndex !== undefined) {
+                    if (entity.customDatasetIndex !== undefined && entity.billboard) {
                         if (selectedOptions.includes(entity.customDatasetIndex)) {
-                            entity.billboard.color = Cesium.Color.WHITE.withAlpha(1.0); // Fully visible
+                            entity.billboard.color = Cesium.Color.WHITE.withAlpha(1.0);
                         } else {
-                            entity.billboard.color = Cesium.Color.WHITE.withAlpha(0.0); // Fully transparent
+                            entity.billboard.color = Cesium.Color.WHITE.withAlpha(0.0);
                         }
                     }
                 });
             }
 
-            // Add an event listener to the dropdown to handle selection changes
             dropdown.addEventListener('change', updateMarkerVisibility);
-
-            // Initialize marker visibility
             updateMarkerVisibility();
 
-
-            // Define the corner points for the study area
             const corners = [
                 createFormattedCoordinate(MAP_BOUNDS.north, MAP_BOUNDS.west, 'NW'),
                 createFormattedCoordinate(MAP_BOUNDS.north, MAP_BOUNDS.east, 'NE'),
@@ -900,10 +727,9 @@
                 createFormattedCoordinate(MAP_BOUNDS.south, MAP_BOUNDS.west, 'SW')
             ];
 
-            // Add corner markers as individual points with labels
             corners.forEach(corner => {
                 viewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(corner.lon, corner.lat, 0), // Set height to 0
+                    position: Cesium.Cartesian3.fromDegrees(corner.lon, corner.lat, 0),
                     point: {
                         pixelSize: 10,
                         color: Cesium.Color.RED
@@ -930,60 +756,48 @@
             viewer.timeline.container.style.visibility = 'hidden';
             viewer.scene.globe.depthTestAgainstTerrain = false;
 
-            // Center the camera on the midpoint of the study area, slightly south for a better 3D view
             const centerLon = (MAP_BOUNDS.west + MAP_BOUNDS.east) / 2;
-            const centerLat = (MAP_BOUNDS.south + MAP_BOUNDS.north) / 2;  // Slightly south of center for better view
+            const centerLat = (MAP_BOUNDS.south + MAP_BOUNDS.north) / 2;
 
-            // Center view button functionality
             window.document.getElementById('centeredViewButton1').addEventListener('click', centeredView);
-            //window.parent.document.getElementById('centeredViewButton').addEventListener('click', centeredView);
-
 
             function centeredView() {
-                // Get the coordinates from the input box
                 const lon = centerLon;
                 const lat = centerLat;
 
-                // Calculate the bounding box dimensions
                 const width = MAP_BOUNDS.east - MAP_BOUNDS.west;
                 const height = MAP_BOUNDS.north - MAP_BOUNDS.south;
                 const maxDimension = Math.max(width, height);
 
-                // Estimate height based on the bounding box size
-                const estimatedHeight = maxDimension * 111000 * zoomOutFactor; // 111,000 meters per degree
+                const estimatedHeight = maxDimension * 111000 * zoomOutFactor;
 
-                // Move the camera to the new coordinates with the estimated height
                 viewer.camera.flyTo({
                     destination: Cesium.Cartesian3.fromDegrees(lon, lat, estimatedHeight),
                     orientation: {
                         heading: 0.0,
-                        pitch: Cesium.Math.toRadians(-90.0), // Looking straight down
+                        pitch: Cesium.Math.toRadians(-90.0),
                         roll: 0.0
                     }
                 });
-            };
-            centeredView()
+            }
 
-            // North arrow rotation function based on camera heading
+            centeredView();
+
             function updateNorthArrow() {
                 const heading = Cesium.Math.toDegrees(viewer.camera.heading);
                 document.getElementById('northArrow').style.transform = `rotate(${-heading}deg)`;
             }
 
-            // Initial north arrow update and binding to camera movement
             updateNorthArrow();
             viewer.scene.postRender.addEventListener(updateNorthArrow);
 
-            // Override the home button functionality
             viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function (e) {
-                e.cancel = true; // Prevent the default home button action
-                centeredView()
-
+                e.cancel = true;
+                centeredView();
             });
 
-            // Plot GeoJSON data with custom shape and color markers
             PROXIES.forEach((proxyKey) => {
-                const geojsonUrl = GEOJSON_URLS[proxyKey]
+                const geojsonUrl = GEOJSON_URLS[proxyKey];
                 Cesium.GeoJsonDataSource.load(geojsonUrl, { clampToGround: true }).then((dataSource) => {
                     const uniqueLocationData = {};
 
@@ -994,8 +808,8 @@
                             properties[propName] = value;
                         });
 
-                        // Store descriptions in entity for tooltip usage
                         entity.columnDefinitions = columnDefinitions;
+
                         if (Cesium.defined(entity.position)) {
                             const position = entity.position.getValue(Cesium.JulianDate.now());
                             const cartographic = Cesium.Cartographic.fromCartesian(position);
@@ -1003,7 +817,6 @@
                             const lon = Cesium.Math.toDegrees(cartographic.longitude);
                             const coordKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
 
-                            // Set initial transparency for each marker
                             entity.billboard.color = Cesium.Color.WHITE.withAlpha(initialTransparency);
 
                             if (!uniqueLocationData[coordKey]) {
@@ -1014,24 +827,24 @@
                                 };
                             }
 
-                            const properties = {};
+                            const propertiesCopy = {};
                             entity.properties.propertyNames.forEach(propName => {
                                 let value = entity.properties[propName].getValue();
 
-                                // Check if the property key contains "Rank" and if the value is a number
                                 if ((propName.includes("Rank") || propName.includes("Age")) && typeof value === "number") {
-                                    value = parseFloat(value.toFixed(2)); // Round to one decimal place
+                                    value = parseFloat(value.toFixed(2));
                                 }
 
-                                properties[propName] = value;
+                                propertiesCopy[propName] = value;
                             });
 
-                            uniqueLocationData[coordKey].properties.push(properties);
+                            uniqueLocationData[coordKey].properties.push(propertiesCopy);
                         }
                     });
+
                     Object.keys(uniqueLocationData).forEach(coordKey => {
                         const location = uniqueLocationData[coordKey];
-                        // Extract contact names and count unique ones
+
                         const contactNames = location.properties.map(property => {
                             const contactName = property["Contact Name"] || "Unknown Contact";
                             return contactName.includes('.') ? contactName.split('.')[0] : contactName;
@@ -1039,7 +852,6 @@
                         const uniqueContactNames = new Set(contactNames);
                         const uniqueContactNamesCount = uniqueContactNames.size;
 
-                        // Calculate marker size based on the uniqueContactNamesCount
                         const markerSize = baseMarkerSize + uniqueContactNamesCount;
 
                         let proxy = "Default";
@@ -1055,20 +867,18 @@
                             }
                         }
 
-
                         const shapeType = SHAPES[proxy];
                         const colorType = COLORS[proxy];
                         const markerImage = createImage(shapeType, colorType, markerSize);
 
-                        // Set the eyeOffset inversely proportional to the marker size for rendering order
+                        let eyeOffsetValue;
                         if (markerSize < 10) {
-                            eyeOffsetValue = eyeOffsetFactor[0] * Math.exp(-markerSize / 5); // Very close for smallest markers
+                            eyeOffsetValue = eyeOffsetFactor[0] * Math.exp(-markerSize / 5);
                         } else if (markerSize < 20) {
-                            eyeOffsetValue = eyeOffsetFactor[1] * Math.log(1 / markerSize); // Moderate closeness for medium markers
+                            eyeOffsetValue = eyeOffsetFactor[1] * Math.log(1 / markerSize);
                         } else {
-                            eyeOffsetValue = eyeOffsetFactor[2]; // Minimal offset for largest markers
+                            eyeOffsetValue = eyeOffsetFactor[2];
                         }
-                        // const eyeOffsetValue = eyeOffsetFactor * Math.log(1000 / markerSize); // Logarithmic scaling
 
                         const marker = viewer.entities.add({
                             position: Cesium.Cartesian3.fromDegrees(location.lon, location.lat, 0),
@@ -1076,21 +886,19 @@
                                 image: markerImage,
                                 width: markerSize,
                                 height: markerSize,
-                                color: Cesium.Color.WHITE, // Default color
-                                scale: 1.0, // Default scale
-                                eyeOffset: new Cesium.Cartesian3(0, 0, eyeOffsetValue), // Adjust for z-order
-                                disableDepthTestDistance: Number.POSITIVE_INFINITY // Ensures visibility at all distances
-
+                                color: Cesium.Color.WHITE,
+                                scale: 1.0,
+                                eyeOffset: new Cesium.Cartesian3(0, 0, eyeOffsetValue),
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY
                             },
-                            customDatasetIndex: proxyKey // Set the dataset key here
+                            customDatasetIndex: proxyKey
                         });
 
-                        // Store the properties as custom data for the popup
                         marker.customProperties = location.properties;
-
                     });
 
                     const uniqueLegendEntries = new Set();
+
                     function addToLegend(shape, color, description) {
                         const key = `${shape}-${color}-${description}`;
                         if (uniqueLegendEntries.has(key)) return;
@@ -1107,8 +915,8 @@
 
                         ctx.fillStyle = color;
                         ctx.globalAlpha = 0.99;
-                        ctx.strokeStyle = "black"; // Set stroke color to black
-                        ctx.lineWidth = 1; // Set thickness of the stroke
+                        ctx.strokeStyle = "black";
+                        ctx.lineWidth = 1;
 
                         switch (shape) {
                             case 'square': ctx.fillRect(0, 0, 15, 15); ctx.strokeRect(0, 0, 15, 15); break;
@@ -1147,7 +955,7 @@
 
                         document.getElementById('legend').appendChild(legendItem);
                     }
-                    // Populate the legend
+
                     if (!legendDone) {
                         legendDone = true;
                         Object.keys(COLORS).forEach(value => {
@@ -1155,19 +963,16 @@
                         });
                     }
 
-                    // Click handler to display data in a custom popup and highlight the marker
+                    // Click handler -> popup in parent + highlight marker
                     viewer.screenSpaceEventHandler.setInputAction(async (movement) => {
                         let pickedLon = "N/A";
                         let pickedLat = "N/A";
                         const pickedObject = viewer.scene.pick(movement.position);
                         if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.customProperties) {
                             const propertiesList = pickedObject.id.customProperties;
-                            const eventCount = propertiesList.length;
 
-                            // Get the correct proxyKey
                             const proxyKey = pickedObject.id.customDatasetIndex;
 
-                            // Get lat/lon of the picked point
                             const cartographic = Cesium.Cartographic.fromCartesian(
                                 pickedObject.id.position.getValue(Cesium.JulianDate.now())
                             );
@@ -1175,24 +980,20 @@
                             pickedLon = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
                             pickedLat = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
 
-                            // Ensure column descriptions are loaded before proceeding
                             if (!columnDescriptionsByProxy[proxyKey]) {
                                 console.log(`Waiting for column descriptions for proxy ${proxyKey}...`);
-                                await loadColumnDescriptions();  // Wait until descriptions are loaded
+                                await loadColumnDescriptions();
                             }
 
-                            // Get the correct column descriptions
                             const columnDescriptions = columnDescriptionsByProxy[proxyKey] || {};
 
-                            // Reset the last highlighted marker if it exists
                             if (lastHighlightedMarker) {
                                 lastHighlightedMarker.billboard.scale = 1.0;
                                 lastHighlightedMarker.billboard.color = Cesium.Color.WHITE;
                             }
 
-                            // Highlight the clicked marker
                             pickedObject.id.billboard.scale = 2.0;
-                            pickedObject.id.billboard.color = Cesium.Color.BLACK;//.withAlpha(0.6);
+                            pickedObject.id.billboard.color = Cesium.Color.BLACK;
                             pickedObject.id.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
                             lastHighlightedMarker = pickedObject.id;
 
@@ -1201,51 +1002,44 @@
                                 existingPopup.remove();
                             }
 
-                            // Extract Contact Names
                             const contactNames = propertiesList.map(property => {
                                 const contactName = property["Contact Name"] || `Event ${PROXIES.indexOf(proxyKey) + 1}`;
                                 return contactName.includes('.') ? contactName.split('.')[0] : contactName;
                             });
 
-                            // Normalize contact names: Remove trailing lowercase letters & '?' at the end
                             const normalizedContacts = contactNames.map(name => name.replace(/[a-z?]+$/, ""));
-                            const uniqueContactNames = new Set(normalizedContacts); // Store only unique normalized contacts
-                            const uniqueContactNamesCount = uniqueContactNames.size; // Get correct unique count
+                            const uniqueContactNames = new Set(normalizedContacts);
+                            const uniqueContactNamesCount = uniqueContactNames.size;
 
-
-                            // Move "Contact Name" row to the top
                             const reorderedKeys = ["Contact Name", ...Object.keys(propertiesList[0]).filter(key => key !== "Contact Name")];
 
-                            // Function to normalize keys: remove spaces, tabs, linefeeds, and convert to lowercase
                             function normalizeKey(key) {
                                 return key
-                                    .toLowerCase()  // Convert to lowercase
-                                    .replace(/[\s\t\n\r]+/g, '')  // Remove spaces, tabs, and newlines
-                                    .normalize("NFKC");  // Normalize Unicode characters
+                                    .toLowerCase()
+                                    .replace(/[\s\t\n\r]+/g, '')
+                                    .normalize("NFKC");
                             }
 
-                            // Normalize column descriptions for easier lookup
                             const normalizedColumnDescriptions = {};
-                            const normalizedDisplaySettings = {}; // Store display settings ("Yes" or "No")
+                            const normalizedDisplaySettings = {};
 
                             Object.keys(columnDescriptions).forEach(key => {
                                 const normalizedKey = normalizeKey(key);
                                 normalizedColumnDescriptions[normalizedKey] = columnDescriptions[key].description;
-                                normalizedDisplaySettings[normalizedKey] = columnDescriptions[key].display || "Yes"; // Default to "Yes"
+                                normalizedDisplaySettings[normalizedKey] = columnDescriptions[key].display || "Yes";
                             });
-                            // ✅ Ensure `hiddenRowIds` exists in the parent window
+
                             if (!window.parent.hiddenRowIds) {
                                 window.parent.hiddenRowIds = [];
                             }
+
                             let tableHtml = `
 <div id="popupContainer" style="width:100%;">
     <div style="display: flex; align-items: center; padding: 5px; background-color: #b3b3b3; position: sticky; top: 0; z-index: 2;">
         <button onclick="
-    // Remove the popup from the parent window
     const popup = document.getElementById('popupContainer');
     if (popup) popup.remove();
 
-    // Send a message to the iframe to reset the highlighted marker
     const iframe = document.getElementById('3dIframe');
     if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({ action: 'resetHighlight' }, '*');
@@ -1253,17 +1047,15 @@
         console.error('Iframe or its content is not accessible.');
     }
 
-    // Update selected values and refresh the plot
     const selectedValues = getSelectedDatasetValues();
     plotData(selectedValues);
 "
 style="background-color: white; color: #333333; border: none; padding: 5px 5px; width:20px; cursor: pointer; font-size: 10px; font-weight: bold; margin-right: 10px;">X</button>
 
-                <span style="color: #333333; font-weight: bold; margin-right: 10px;">
+        <span style="color: #333333; font-weight: bold; margin-right: 10px;">
             ${uniqueContactNamesCount} Event${uniqueContactNamesCount > 1 ? 's' : ''} 
             (Longitude: ${pickedLon}, Latitude: ${pickedLat})
         </span>
-        <!-- Checkbox to toggle hidden rows -->
 <label for="toggleHiddenRows" style="margin-left: 10px; font-size: 12px; color: black; display: inline-flex; align-items: center;"> Show&nbsp;Hidden&nbsp;Rows:&nbsp;
     <input type="checkbox" id="toggleHiddenRows" style="margin-right: 4px;" onchange="
         window.parent.hiddenRowIds.forEach(rowId => {
@@ -1275,7 +1067,6 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
             }
         });
     ">
-   
 </label>
 
     </div>
@@ -1283,7 +1074,7 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
     <div id="tableContainer" style="overflow:auto; overflow-x: scroll; overflow-y: scroll;">
         <table style="border-collapse: collapse; width: 100%; height:100%;">
             <thead>
-                <tr style="background-color: wnte; position: sticky; top: 0; z-index: 1;">
+                <tr style="background-color: white; position: sticky; top: 0; z-index: 1;">
                     <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd; background-color: #b3b3b3; position: sticky; left: 0; z-index: 2;"
                         title="${normalizedColumnDescriptions[normalizeKey('Contact Name')] || 'This column represents Contact Names'}">
                         Contact Name
@@ -1298,17 +1089,16 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
             </thead>
             <tbody>
                 ${reorderedKeys
-                                    .filter(key => key !== "Contact Name") // Exclude "Contact Name" row
+                                    .filter(key => key !== "Contact Name")
                                     .map((key, rowIndex) => {
                                         const normalizedKey = normalizeKey(key);
-                                        const rowStyle = normalizedDisplaySettings[normalizedKey] === "No" ? 'style="display: none;"' : '';
                                         const isHidden = normalizedDisplaySettings[normalizedKey] === "No";
-
+                                        const rowStyle = isHidden ? 'display: none;' : '';
                                         if (isHidden && !window.parent.hiddenRowIds.includes(normalizedKey)) {
-                                            window.parent.hiddenRowIds.push(normalizedKey); // ✅ Store hidden row ID in parent
+                                            window.parent.hiddenRowIds.push(normalizedKey);
                                         }
                                         return `
-                        <tr id="${normalizedKey}" ${rowStyle} style="background-color: ${rowIndex % 2 === 0 ? '#f1f1f1' : '#e9e9e9'};">
+                        <tr id="${normalizedKey}" style="${rowStyle} background-color: ${rowIndex % 2 === 0 ? '#f1f1f1' : '#e9e9e9'};">
                             <td style="padding: 10px; border-bottom: 1px solid #ddd; color: #333; font-weight: bold; background-color: ${isHidden ? '#d3d3d3' : '#b3b3b3'}; position: sticky; left: 0; z-index: 1;" 
                                 title="${normalizedColumnDescriptions[normalizedKey] || key}">
                                 ${key}
@@ -1326,7 +1116,6 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
     </div>
 </div>`;
 
-
                             if (hasParent) {
                                 const parentDoc = window.parent.document;
                                 const fileTable = parentDoc.getElementById('infobox');
@@ -1341,78 +1130,10 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
                             }
                         }
                     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
                 }).catch(console.error);
             });
 
-            // Function to set marker transparency for a specific dataset
-            function setMarkerTransparency(datasetIndex, transparency) {
-                viewer.entities.values.forEach(entity => {
-                    if (entity.customDatasetIndex === datasetIndex && entity.billboard) {
-                        entity.billboard.color = Cesium.Color.WHITE.withAlpha(transparency);
-                    }
-                });
-            }
-
-            // Add a unique shape-color entry to the legend
-            const uniqueLegendEntries = new Set();
-            function addToLegend(shape, color, description) {
-                const key = `${shape}-${color}-${description}`;
-                if (uniqueLegendEntries.has(key)) return;
-
-                uniqueLegendEntries.add(key);
-                const legendItem = document.createElement('div');
-                legendItem.style.display = 'flex';
-                legendItem.style.alignItems = 'center';
-                legendItem.style.marginBottom = '5px';
-
-                const iconCanvas = document.createElement('canvas');
-                iconCanvas.width = iconCanvas.height = 20;
-                const ctx = iconCanvas.getContext('2d');
-
-                ctx.fillStyle = color;
-                ctx.strokeStyle = "black"; // Set stroke color to black
-                ctx.lineWidth = 1; // Set thickness of the stroke
-                ctx.globalAlpha = 0.99; // Set transparency for fill
-                switch (shape) {
-                    case 'square': ctx.fillRect(0, 0, 20, 20); ctx.strokeRect(0, 0, 15, 15); break;
-                    case 'circle': ctx.beginPath(); ctx.arc(10, 10, 10, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); break;
-                    case 'semicircle': ctx.beginPath(); ctx.arc(10, 10, 10, 0, Math.PI); ctx.lineTo(10, 10); ctx.fill(); ctx.stroke(); break;
-                    case 'triangle': ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(0, 20); ctx.lineTo(20, 20); ctx.fill(); ctx.stroke(); break;
-                    case 'triangle-side': ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 20); ctx.lineTo(20, 10); ctx.fill(); ctx.stroke(); break;
-                    case 'pentagon':
-                        ctx.beginPath();
-                        const centerX = 10;
-                        const centerY = 10;
-                        const radius = 10;
-                        const sides = 5;
-                        for (let i = 0; i < sides; i++) {
-                            const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
-                            const x = centerX + radius * Math.cos(angle);
-                            const y = centerY + radius * Math.sin(angle);
-                            if (i === 0) {
-                                ctx.moveTo(x, y);
-                            } else {
-                                ctx.lineTo(x, y);
-                            }
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.stroke();
-                        break;
-                    default: console.error('Invalid shape:', shape); break;
-                }
-
-                legendItem.appendChild(iconCanvas);
-                const text = document.createElement('span');
-                text.textContent = description;
-                text.style.marginLeft = '10px';
-                legendItem.appendChild(text);
-
-                document.getElementById('legend').appendChild(legendItem);
-            }
-
-            // Create a shape icon
+            // Marker symbol generator (used above)
             function createImage(shape, color, size) {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -1420,8 +1141,8 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
 
                 ctx.fillStyle = color;
                 ctx.globalAlpha = 0.99;
-                ctx.strokeStyle = "black"; // Set stroke color to black
-                ctx.lineWidth = 1; // Set thickness of the stroke
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1;
 
                 switch (shape) {
                     case 'square': ctx.fillRect(0, 0, size, size); ctx.strokeRect(0, 0, 15, 15); break;
@@ -1455,34 +1176,30 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
             }
         });
 
-
         function clearHighlight() {
             if (lastHighlightedMarker) {
-                lastHighlightedMarker.billboard.scale = 1.0; // Reset to original scale
-                lastHighlightedMarker.billboard.color = Cesium.Color.WHITE; // Reset to original color
-                lastHighlightedMarker = null; // Clear the highlighted marker reference
-            };
+                lastHighlightedMarker.billboard.scale = 1.0;
+                lastHighlightedMarker.billboard.color = Cesium.Color.WHITE;
+                lastHighlightedMarker = null;
+            }
             if (lastHighlightedBarMarkers.length > 0) {
                 lastHighlightedBarMarkers.forEach(marker => {
                     marker.billboard.scale = 1.0;
                     marker.billboard.color = Cesium.Color.WHITE;
                 });
-                lastHighlightedBarMarkers = []; // Clear previous highlights
+                lastHighlightedBarMarkers = [];
             }
         }
+
         window.addEventListener("message", function (event) {
             if (event.data.action === "resetHighlight") {
                 if (lastHighlightedMarker) {
                     lastHighlightedMarker.billboard.scale = 1.0;
                     lastHighlightedMarker.billboard.color = Cesium.Color.WHITE;
-                    lastHighlightedMarker = null; // Clear reference
+                    lastHighlightedMarker = null;
                 }
             }
         });
-
-
-
-
     </script>
 </body>
 
