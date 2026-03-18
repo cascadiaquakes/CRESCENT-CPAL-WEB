@@ -15,7 +15,7 @@
 
 ```
 CPAL-WEB/
-├── app
+├── app/
 │   │                               # Application logic (FastAPI app, routers, utilities)
 │   ├── static/                     # Static assets such as CSS, JS, icons, and GeoJSON
 │   │   ├── config/                 # Site configuration parameters including URLs to the GeoJSON datasets
@@ -27,6 +27,7 @@ CPAL-WEB/
 │   │
 │   ├── main.py                     # FastAPI app entry point
 │   └── routes.py                   # FastAPI route handlers
+├── infra/                          # Infrastructure-as-Code
 ├── Dockerfile                      # Docker configuration for containerized deployment
 ├── requirements.txt                # Python dependencies
 └── README.md                       # This file
