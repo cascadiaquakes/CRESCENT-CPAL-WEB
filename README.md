@@ -33,6 +33,7 @@ CPAL-WEB/
 └── README.md                       # This file
 ```
 
+
 ## Data Format Requirements
 
 The web viewer expects site data in the form of **GeoJSON files** with valid `latitude` and `longitude` properties. Each GeoJSON feature should include relevant site attributes such as site name, evidence type, and ranking/classification information.
