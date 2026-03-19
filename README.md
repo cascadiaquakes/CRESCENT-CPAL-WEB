@@ -14,7 +14,7 @@
 ## Directory Structure
 
 ```
-CPAL-WEB
+CPAL-WEB/
 ├── app/
 │   │                               # Application logic (FastAPI app, routers, utilities)
 │   ├── static/                     # Static assets such as CSS, JS, icons, and GeoJSON
