@@ -69,8 +69,7 @@ jobs:
             type=raw,value=${{ steps.version.outputs.version }}
       # To push an image to AWS ECR, there are two prerequisites:
       # 1. The repository must already exist (in the matching region and AWS account).
-      # 2. The IAM role that gitlab assumes must have permissions to push to the repository. For example,
-      #   the role could have the `AmazonEC2ContainerRegistryPowerUser` managed policy attached to it.
+      # 2. The IAM role that github assumes must have permissions to push images and layers to the repository.
       - run: echo "Ready to push ${{ env.ECR_REGISTRY_DOMAIN_NAME }}/${{ env.ECR_REPOSITORY_NAME }}"
       - name: Build and push Docker image to ECR
         uses: docker/build-push-action@v7
