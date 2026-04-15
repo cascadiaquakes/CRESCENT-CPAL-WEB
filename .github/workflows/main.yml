@@ -14,7 +14,9 @@ env:
   ECR_REPOSITORY_NAME: cpal-web # this application's name
   ECR_REGISTRY_DOMAIN_NAME: 818214664804.dkr.ecr.us-east-2.amazonaws.com
 jobs:
-  Build:
+  build:
+    name: Build and Push Docker Image to ECR
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
       # By default, recent versions of buildx include provenance and SBOM attestations, which some registries (like Amazon ECR)
@@ -77,8 +79,10 @@ jobs:
             ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
 
-  DeployDev:
-    needs: Build
+  deploy_dev:
+    name: Deploy to Dev Environment
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       ECR_IMAGE_URI: ${{ needs.build.outputs.image_uri }}
