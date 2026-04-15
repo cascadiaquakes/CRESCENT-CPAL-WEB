@@ -1,5 +1,5 @@
 name: Deploy with CDK
-run-name: ${{ github.actor }} triggered workflow by Pushing or Merging to the main Branch
+run-name: ${{ github.actor }} triggered workflow
 on:
   push:
     branches:
