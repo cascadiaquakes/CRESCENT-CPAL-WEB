@@ -13,17 +13,19 @@ permissions:
 env:
   ECR_REPOSITORY_NAME: cpal-web # this application's name
   ECR_REGISTRY_DOMAIN_NAME: 818214664804.dkr.ecr.us-east-2.amazonaws.com
+  # By default, recent versions of buildx include provenance and SBOM attestations, which some registries (like Amazon ECR)
+  # may reject if specific permissions are not set. Disable attestations to avoid this issue.
+  BUILDX_NO_DEFAULT_ATTESTATIONS: 1
 jobs:
   build:
-    name: Build and Push Docker Image to ECR
+    name: Build Docker Image
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      # By default, recent versions of buildx include provenance and SBOM attestations, which some registries (like Amazon ECR)
-      # may reject if specific permissions are not set. Disable attestations to avoid this issue.
-      BUILDX_NO_DEFAULT_ATTESTATIONS: 1
     outputs:
+      version: ${{ steps.version.outputs.version }}
       image_uri: ${{ env.ECR_REGISTRY_DOMAIN_NAME }}/${{ env.ECR_REPOSITORY_NAME }}:${{ steps.version.outputs.version }}
+      image_tags: ${{ steps.metadata.outputs.tags }}
+      image_labels: ${{ steps.metadata.outputs.labels }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - name: Check out repository code
@@ -34,7 +36,8 @@ jobs:
         run: |
           NOW_AS_DOT_TIME=$(date +'%Y.%m.%d.%H%M%S')
           SHORT_SHA=${GITHUB_SHA::7}
-          VERSION="${NOW_AS_DOT_TIME}-${GITHUB_REF_NAME}-${SHORT_SHA}"
+          SAFE_GITHUB_REF_NAME=$(echo "$GITHUB_REF_NAME" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION="${NOW_AS_DOT_TIME}-${SAFE_GITHUB_REF_NAME}-${SHORT_SHA}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version tag: $VERSION"
       - name: Configure AWS credentials
@@ -68,21 +71,50 @@ jobs:
             type=sha,format=long
             type=raw,value=dev-latest
             type=raw,value=${{ steps.version.outputs.version }}
-      # To push an image to AWS ECR, there are two prerequisites:
-      # 1. The repository must already exist (in the matching region and AWS account).
-      # 2. The IAM role that github assumes must have permissions to push images and layers to the repository.
-      - run: echo "Ready to push ${{ env.ECR_REGISTRY_DOMAIN_NAME }}/${{ env.ECR_REPOSITORY_NAME }}"
-      - name: Build and push Docker image to ECR
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ steps.metadata.outputs.tags }}
+          push: false
+          tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+
+
+  push_image:
+    name: Push Docker Image to ECR
+    # To push an image to AWS ECR, there are two prerequisites:
+    # 1. The ECR repository must already exist (in the matching region and AWS account).
+    # 2. The IAM role that github assumes must have permissions to push images and layers to the repository.
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: assumedRoleForGithubSession
+          aws-region: us-east-2
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Docker Login to ECR
+        uses: docker/login-action@v4
+      - run: echo "Ready to push ${{ env.ECR_REGISTRY_DOMAIN_NAME }}/${{ env.ECR_REPOSITORY_NAME }}"
+      - name: Push Docker image to ECR
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: |
+            ${{ needs.build.outputs.image_tags }}
+          labels: ${{ needs.build.outputs.image_labels }}
 
   deploy_dev:
     name: Deploy to Dev Environment
-    needs: build
+    needs: push_image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
