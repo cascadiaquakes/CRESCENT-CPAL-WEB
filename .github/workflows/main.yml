@@ -101,6 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ECR_IMAGE_URI: ${{ needs.push_image.outputs.image_uri }}
+      RELATIVE_PATH_TO_CDK_APP: infra/cpalwebAppA72206FC
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
@@ -122,11 +123,14 @@ jobs:
           echo "Image to pull is ${{ env.ECR_IMAGE_URI }}"
       - name: Install CDK Dependencies
         run: |
-          cd infra/cpalwebAppA72206FC
-          npm install
+          pwd
+          cd ${{ env.RELATIVE_PATH_TO_CDK_APP }}
+          pwd
           pip install -r requirements.txt
       - name: Deploy with CDK
         run: |
-          cd infra/cpalwebAppA72206FC
-          # cdk deploy --conext deployment-environment=dev --require-approval never
-          cdk deploy --require-approval never  # deliberately omit context for testing
+          pwd
+          cd ${{ env.RELATIVE_PATH_TO_CDK_APP }}
+          pwd
+          cd diff --context deployment-environment=dev
+          cdk deploy --require-approval never --context deployment-environment=dev
