@@ -132,5 +132,5 @@ jobs:
           pwd
           cd ${{ env.RELATIVE_PATH_TO_CDK_APP }}
           pwd
-          cd diff --context deployment-environment=dev
+          cdk diff --context deployment-environment=dev
           cdk deploy --require-approval never --context deployment-environment=dev
