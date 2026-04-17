@@ -120,3 +120,13 @@ jobs:
           python-version: '3.14'
       - run: |
           echo "Image to pull is ${{ env.ECR_IMAGE_URI }}"
+      - name: Install CDK Dependencies
+        run: |
+          cd infra/infra/cpalwebAppA72206FC
+          npm install
+          pip install -r requirements.txt
+      - name: Deploy with CDK
+        run: |
+          cd infra/infra/cpalwebAppA72206FC
+          # cdk deploy --conext deployment-environment=dev --require-approval never
+          cdk deploy --require-approval never  # deliberately omit context for testing
