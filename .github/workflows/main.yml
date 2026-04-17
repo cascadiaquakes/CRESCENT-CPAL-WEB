@@ -127,6 +127,6 @@ jobs:
           pip install -r requirements.txt
       - name: Deploy with CDK
         run: |
-          cd infra/infra/cpalwebAppA72206FC
+          cd infra/cpalwebAppA72206FC
           # cdk deploy --conext deployment-environment=dev --require-approval never
           cdk deploy --require-approval never  # deliberately omit context for testing
