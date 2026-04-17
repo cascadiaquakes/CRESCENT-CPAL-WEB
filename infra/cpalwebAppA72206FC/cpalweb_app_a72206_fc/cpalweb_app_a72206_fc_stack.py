@@ -184,11 +184,7 @@ class CpalwebAppA72206FcStack(Stack):
                 },
               ],
               'essential': True,
-              'image': ''.join([
-                '718999558082.dkr.ecr.us-east-2.',
-                self.url_suffix,
-                '/cpal-web:main-20251106194237-b70aaf35',
-              ]),
+              'image': f"{config.ecr_image_uri}",
               'logConfiguration': {
                 'logDriver': 'awslogs',
                 'options': {
@@ -240,7 +236,7 @@ class CpalwebAppA72206FcStack(Stack):
                 ],
                 'Effect': 'Allow',
                 'Resource': [
-                  'arn:aws:ecr:us-east-2:718999558082:repository/cpal-web',
+                  'arn:aws:ecr:us-east-2:818214664804:repository/cpal-web',
                 ],
               },
               {
