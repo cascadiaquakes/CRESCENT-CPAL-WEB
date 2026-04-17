@@ -7,7 +7,6 @@ from cpalweb_app_a72206_fc.cpalweb_app_a72206_fc_stack import CpalwebAppA72206Fc
 from lib.deployment_environment_config import DeploymentEnvironmentConfig
 
 
-
 AWS_ACCOUNT_ID = '818214664804'
 AWS_REGION = 'us-east-2'
 ECR_REPOSITORY_NAME = os.getenv("ECR_REPOSITORY_NAME", default='cpal-web')
