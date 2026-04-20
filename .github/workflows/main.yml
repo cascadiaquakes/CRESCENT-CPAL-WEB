@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout when the 'permissions' key is present
@@ -20,7 +19,6 @@ env:
 jobs:
   build:
     name: Validate Docker Image Build
-    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -67,7 +65,7 @@ jobs:
     # 1. The ECR repository must already exist (in the matching region and AWS account).
     # 2. The IAM role that github assumes must have permissions to push images and layers to the repository.
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       image_uri: ${{ needs.build.outputs.image_uri }}
@@ -99,7 +97,7 @@ jobs:
   deploy_dev:
     name: Deploy to Dev Environment
     needs: push_image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       image_uri: ${{ needs.push_image.outputs.image_uri }}
@@ -140,7 +138,9 @@ jobs:
   deploy_prod:
     name: Deploy to Prod Environment
     needs: deploy_dev
-    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+      # url: https://cpalweb.cascadiaquake.org
     runs-on: ubuntu-latest
     env:
       ECR_IMAGE_URI: ${{ needs.deploy_dev.outputs.image_uri }}
