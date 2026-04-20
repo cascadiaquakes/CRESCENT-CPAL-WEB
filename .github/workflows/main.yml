@@ -139,7 +139,7 @@ jobs:
     name: Deploy to Prod Environment
     needs: deploy_dev
     environment:
-      name: production
+      name: Production
       # url: https://cpalweb.cascadiaquake.org
     runs-on: ubuntu-latest
     env:
