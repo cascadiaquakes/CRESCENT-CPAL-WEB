@@ -188,8 +188,6 @@ jobs:
           docker push ${{ env.ECR_REGISTRY_DOMAIN_NAME }}/${{ env.ECR_REPOSITORY_NAME }}:prod-latest
       - name: Deploy with CDK
         run: |
-          pwd
           cd ${{ env.RELATIVE_PATH_TO_CDK_APP }}
-          pwd
           cdk diff --context deployment-environment=prod
-          #cdk deploy --require-approval never --context deployment-environment=prod
+          cdk deploy --require-approval never --context deployment-environment=prod
