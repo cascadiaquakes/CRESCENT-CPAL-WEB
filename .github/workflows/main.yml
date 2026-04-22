@@ -13,6 +13,7 @@ permissions:
 env:
   ECR_REPOSITORY_NAME: cpal-web # this application's name
   ECR_REGISTRY_DOMAIN_NAME: 818214664804.dkr.ecr.us-east-2.amazonaws.com
+  RELATIVE_PATH_TO_CDK_APP: infra/cpalwebAppA72206FC
   # By default, recent versions of buildx include provenance and SBOM attestations, which some registries (like Amazon ECR)
   # may reject if specific permissions are not set. Disable attestations to avoid this issue.
   BUILDX_NO_DEFAULT_ATTESTATIONS: 1
@@ -103,7 +104,6 @@ jobs:
       image_uri: ${{ needs.push_image.outputs.image_uri }}
     env:
       ECR_IMAGE_URI: ${{ needs.push_image.outputs.image_uri }}
-      RELATIVE_PATH_TO_CDK_APP: infra/cpalwebAppA72206FC
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
@@ -143,7 +143,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ECR_IMAGE_URI: ${{ needs.deploy_dev.outputs.image_uri }}
-      RELATIVE_PATH_TO_CDK_APP: infra/cpalwebAppA72206FC
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
