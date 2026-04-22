@@ -184,7 +184,7 @@ class CpalwebAppA72206FcStack(Stack):
                 },
               ],
               'essential': True,
-              'image': f"{config.ecr_image_uri}",
+              'image': config.ecr_image_uri,
               'logConfiguration': {
                 'logDriver': 'awslogs',
                 'options': {
