@@ -140,7 +140,6 @@ jobs:
     needs: deploy_dev
     environment:
       name: Production
-      # url: https://cpalweb.cascadiaquake.org
     runs-on: ubuntu-latest
     env:
       ECR_IMAGE_URI: ${{ needs.deploy_dev.outputs.image_uri }}
