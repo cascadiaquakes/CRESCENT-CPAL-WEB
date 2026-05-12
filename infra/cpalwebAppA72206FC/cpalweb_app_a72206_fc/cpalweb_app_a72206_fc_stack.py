@@ -96,6 +96,7 @@ class CpalwebAppA72206FcStack(Stack):
           ],
         )
     fargateTaskAppLogGroupFdfbef61.cfn_options.deletion_policy = cdk.CfnDeletionPolicy.RETAIN
+    fargateTaskAppLogGroupFdfbef61.cfn_options.update_replace_policy = cdk.CfnDeletionPolicy.RETAIN
 
     fargateTaskExecutionRole2B907e8a = iam.CfnRole(self, 'FargateTaskExecutionRole2B907E8A',
           assume_role_policy_document = {
