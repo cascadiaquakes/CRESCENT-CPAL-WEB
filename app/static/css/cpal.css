@@ -1,15 +1,19 @@
-/* General styles */
+/* General styles (font stack lifted from CFM main.css) */
 body,
+html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: #334155;
+}
+
 input,
 button,
 select,
 option {
-    font-family: 'Arial', sans-serif;
-    font-size: 12pt;
-}
-
-body {
-    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
 }
 
 .container {
@@ -294,4 +298,915 @@ body {
 .modal-body-content a {
     color: #0b4a53;
     font-weight: 600;
+}
+
+/* ── Strip default backgrounds on description/filter wrappers (Phase B uses cards instead) ── */
+.description {
+    background-color: transparent;
+    padding: 0;
+}
+
+.filter {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* ── Filter card ── */
+.filter-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    margin: 16px 20px;
+    overflow: hidden;
+}
+
+.filterToggleBtn {
+    cursor: pointer;
+    padding: 14px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0b4a53;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.filterToggleBtn:hover {
+    background: #f1f5f9;
+}
+
+#filterPanel {
+    padding: 20px 24px;
+}
+
+/* ── Three-column filter layout ── */
+.three-column-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+    align-items: start;
+}
+
+.column h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0b4a53;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 14px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.column .field-row {
+    margin-bottom: 14px;
+}
+
+.column .field-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.column .range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.column .range-inputs input[type="number"] {
+    width: 90px;
+}
+
+.column .range-sep {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* ── Modern form controls ── */
+.column input[type="number"],
+.column select {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: #ffffff;
+    color: #0f172a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.column input[type="number"]:focus,
+.column select:focus {
+    outline: none;
+    border-color: #0b4a53;
+    box-shadow: 0 0 0 3px rgba(11, 74, 83, 0.15);
+}
+
+.column select {
+    width: 100%;
+    max-width: 280px;
+    cursor: pointer;
+}
+
+/* ── Buttons ── */
+.column .button-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.column .btn-primary,
+.column .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.column .btn-primary {
+    background: #0b4a53;
+    color: #ffffff;
+}
+
+.column .btn-primary:hover {
+    background: #0f5e69;
+}
+
+.column .btn-secondary {
+    background: #f1f5f9;
+    color: #0b4a53;
+    border-color: #cbd5e1;
+}
+
+.column .btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.column .btn-primary:active,
+.column .btn-secondary:active {
+    transform: translateY(1px);
+}
+
+/* ── Selected dataset container (multi-select injected from iframe) ── */
+#datasetContainer {
+    margin-top: 6px;
+}
+
+/* ── Inline chart user guide ── */
+#chartUserGuide {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #475569;
+}
+
+#chartUserGuide h3 {
+    font-size: 13px;
+    margin: 0 0 8px 0;
+    padding: 0;
+    border: none;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #0b4a53;
+}
+
+#chartUserGuide ol,
+#chartUserGuide ul {
+    margin: 6px 0;
+    padding-left: 20px;
+}
+
+#chartUserGuide li {
+    margin-bottom: 4px;
+}
+
+/* ── Responsive filter ── */
+@media (max-width: 720px) {
+    .filter-card {
+        margin: 12px;
+    }
+
+    #filterPanel {
+        padding: 16px;
+    }
+
+    .three-column-container {
+        gap: 20px;
+    }
+}
+
+/* ================================================================ */
+/* Phase B.2: Full-bleed map with floating sidebar (CFM viewer style) */
+/* ================================================================ */
+
+#viewer2dWrapper {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+#mapContainer {
+    position: absolute;
+    inset: 0;
+}
+
+#mapContainer iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+/* Floating sidebar over the map */
+#sidebarPanel {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    bottom: 60px;
+    width: 290px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+    overflow-y: auto;
+    pointer-events: none;
+    scrollbar-width: none;
+}
+
+#sidebarPanel::-webkit-scrollbar {
+    display: none;
+}
+
+#sidebarPanel > * {
+    pointer-events: auto;
+}
+
+#sidebarPanel.hidden {
+    display: none;
+}
+
+.btn-toggle-sidebar {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 20;
+    display: none;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Translucent card (matches CFM .card-2d) */
+.card-2d {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #334155;
+}
+
+.card-2d-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+/* Accordion section inside card */
+.accordion-section {
+    border: 1px solid #e8ecf0;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Multi-select listbox + dataset container: match Inter typography */
+#datasetContainer,
+#datasetContainer select,
+#datasetContainer option {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
+    color: #334155;
+}
+
+#datasetContainer select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px;
+    background: #ffffff;
+}
+
+.accordion-header:hover {
+    background: #f1f5f9;
+}
+
+.accordion-arrow {
+    font-size: 10px;
+    color: #64748b;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.accordion-section:not(.open) .accordion-arrow {
+    transform: rotate(-90deg);
+}
+
+.accordion-label {
+    flex: 1;
+    white-space: nowrap;
+}
+
+.accordion-body {
+    padding: 6px 14px 12px;
+    background: #ffffff;
+}
+
+.accordion-section:not(.open) .accordion-body {
+    display: none;
+}
+
+/* Inputs/selects within accordion fit the narrower sidebar */
+.accordion-body .field-row {
+    margin-bottom: 12px;
+}
+
+.accordion-body .field-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 5px;
+}
+
+.accordion-body select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.accordion-body .range-inputs input[type="number"] {
+    width: 78px;
+}
+
+.accordion-body .button-row {
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.accordion-body .btn-primary,
+.accordion-body .btn-secondary {
+    width: 100%;
+    padding: 9px 12px;
+}
+
+/* Inline chart guide stays compact inside the accordion */
+#chartUserGuide {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #475569;
+}
+
+#chartUserGuide h3 {
+    font-size: 12px;
+    margin: 0 0 6px 0;
+    padding: 0;
+    border: none;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #0b4a53;
+}
+
+#chartUserGuide ol,
+#chartUserGuide ul {
+    margin: 4px 0;
+    padding-left: 18px;
+}
+
+/* Analytics button (bottom-right icon, mirrors EQ viewer .btn-show-analytics) */
+.btn-show-analytics {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    color: #0b4a53;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.05s;
+}
+
+.btn-show-analytics:hover {
+    background: #ffffff;
+}
+
+.btn-show-analytics:active {
+    transform: translateY(1px);
+}
+
+.btn-show-analytics svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Analytics side panel - slides in from the right */
+.analytics-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: min(440px, 92vw);
+    background: #ffffff;
+    box-shadow: -6px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    overflow: hidden;
+}
+
+.analytics-panel.open {
+    transform: translateX(0);
+}
+
+.analytics-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+
+.analytics-panel-header h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0b4a53;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.btn-close-analytics {
+    background: none;
+    border: 0;
+    color: #64748b;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-close-analytics:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #0b4a53;
+}
+
+.analytics-panel-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 16px 20px;
+}
+
+.analytics-chart-block {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #ffffff;
+}
+
+.analytics-chart-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.analytics-chart-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0b4a53;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.analytics-inline-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.analytics-chart-block #fileListPanel,
+.analytics-chart-block #infobox {
+    width: 100%;
+}
+
+.analytics-chart-block #latitudeChart {
+    width: 100% !important;
+    height: 700px !important;
+}
+
+.analytics-help {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #475569;
+}
+
+.analytics-help h5 {
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0b4a53;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.analytics-help ul {
+    padding-left: 18px;
+    margin: 6px 0;
+}
+
+/* Backdrop (mobile - dims map when panel open) */
+.analytics-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 14;
+    display: none;
+}
+
+.analytics-backdrop.show {
+    display: block;
+}
+
+@media (min-width: 721px) {
+    .analytics-backdrop.show {
+        display: none;
+    }
+}
+
+/* Export Data card (helper text + EQ-viewer gradient download button) */
+.export-helper {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #64748b;
+    font-style: italic;
+    margin: 4px 0 10px 0;
+    text-align: center;
+}
+
+.btn-export-large {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #0b4a53 0%, #0d5a65 100%);
+    color: #ffffff;
+    border: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-export-large:hover {
+    background: linear-gradient(135deg, #0d5a65 0%, #0f6b78 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(11, 74, 83, 0.3);
+}
+
+.btn-export-large:active {
+    transform: translateY(0);
+}
+
+.btn-export-large svg {
+    flex-shrink: 0;
+}
+
+/* ── noUiSlider styling (lifted from CFM main.css) ── */
+.accordion-slider {
+    margin: 4px 0;
+}
+
+.noUi-target {
+    height: 5px !important;
+    border: none !important;
+    background: #e2e8f0 !important;
+    border-radius: 4px !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+.noUi-connect {
+    background: linear-gradient(to right, #0b4a53, #0d6e7a) !important;
+    border-radius: 4px !important;
+}
+
+.noUi-handle {
+    border-radius: 50% !important;
+    width: 14px !important;
+    height: 14px !important;
+    right: -7px !important;
+    top: -5px !important;
+    background: #fff !important;
+    border: 3px solid #0b4a53 !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2) !important;
+    cursor: grab !important;
+    transition: box-shadow 0.15s, transform 0.15s !important;
+}
+
+.noUi-handle:hover {
+    box-shadow: 0 2px 8px rgba(11, 74, 83, 0.35) !important;
+    transform: scale(1.1) !important;
+}
+
+.noUi-handle:active {
+    cursor: grabbing !important;
+    transform: scale(1.15) !important;
+}
+
+.noUi-handle::before,
+.noUi-handle::after {
+    display: none !important;
+}
+
+/* Accordion range badge (min - max display in section header) */
+.accordion-range {
+    font-size: 10px;
+    font-weight: 700;
+    color: #0b4a53;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
+}
+
+/* Map Tools button (bottom-right, stacked above Analytics button) */
+.btn-show-map-tools {
+    position: absolute;
+    bottom: 68px;
+    right: 16px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    color: #0b4a53;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.05s;
+}
+
+.btn-show-map-tools:hover {
+    background: #ffffff;
+}
+
+.btn-show-map-tools:active {
+    transform: translateY(1px);
+}
+
+.btn-show-map-tools svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Map Tools popup (floats up-left from the button) */
+.map-tools-popup {
+    position: absolute;
+    bottom: 68px;
+    right: 68px;
+    z-index: 13;
+    width: 300px;
+    max-width: calc(100vw - 84px);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.map-tools-popup.open {
+    display: flex;
+}
+
+.map-tools-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0b4a53;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.map-tools-close {
+    background: none;
+    border: 0;
+    color: #64748b;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.map-tools-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #0b4a53;
+}
+
+.map-tools-body {
+    padding: 12px 16px;
+}
+
+.map-tools-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.btn-tool {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #0b4a53;
+    border: 1px solid #cbd5e1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.btn-tool:hover {
+    background: #e2e8f0;
+}
+
+.map-tools-body .field-row {
+    margin-bottom: 10px;
+}
+
+.map-tools-body .field-row:last-child {
+    margin-bottom: 0;
+}
+
+.map-tools-body label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 5px;
+}
+
+.map-tools-body select,
+.map-tools-body input[type="number"] {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: #ffffff;
+    color: #0f172a;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+@media (max-width: 720px) {
+    .btn-show-map-tools {
+        bottom: 60px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .map-tools-popup {
+        bottom: 60px;
+        right: 60px;
+        width: calc(100vw - 80px);
+    }
+}
+
+/* Responsive: show hamburger and overlay sidebar on small screens */
+@media (max-width: 720px) {
+    .btn-toggle-sidebar {
+        display: block;
+    }
+
+    #sidebarPanel {
+        top: 60px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: calc(100vw - 24px);
+        max-height: 70vh;
+    }
+
+    #sidebarPanel.hidden {
+        display: none;
+    }
+
+    .btn-show-analytics {
+        bottom: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .analytics-panel {
+        width: 100vw;
+    }
 }

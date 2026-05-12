@@ -39,10 +39,32 @@
     <style>
         @import url(https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Widgets/widgets.css);
 
+        /* Full-bleed iframe: no scrollbars, no margins */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Cesium fills the entire iframe */
         #cesiumContainer {
+            position: absolute;
+            inset: 0;
             width: 100%;
-            height: 60vh;
+            height: 100%;
             display: block;
+        }
+
+        /* Toolbar hidden inside iframe - controls are mirrored in parent CPAL sidebar.
+           Kept in DOM so parent can trigger button clicks / slider events. */
+        .iframe-map-toolbar {
+            display: none;
+        }
+
+        /* Hide the bottom-right logo overlay - the parent header already has it */
+        #logoContainer {
+            display: none;
         }
 
         .button {
@@ -54,7 +76,7 @@
         #northArrow {
             position: absolute;
             top: 70px;
-            right: 300px;
+            right: 20px;
             width: 50px;
             height: 50px;
             background-image: url('/static/images/north_white.png');
@@ -63,37 +85,76 @@
             z-index: 10000;
         }
 
+        /* Legend: bottom-center pill (matches EQ/Ground Failure pattern) */
         #legend {
             position: absolute;
-            bottom: 17%;
-            left: 10px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 999px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+            max-width: calc(100vw - 80px);
+            overflow-x: auto;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        #legend::-webkit-scrollbar {
+            display: none;
+        }
+
+        #legend h3 {
+            display: none;
+        }
+
+        /* Coord readout: under the legend, dark pill */
+        .coord-readout {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            color: #ffffff;
+            padding: 4px 14px;
+            border-radius: 999px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
     </style>
 </head>
 
 <body>
-    <div style="position: relative; margin-top:0;height:50px;font-family: Arial, sans-serif;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button id="centeredViewButton1" style="background-color: #004F59; border-radius: 5px;color: white;">View
-                Home</button>
-            <button style="background-color: #004F59; border-radius: 5px;color: white;" onclick="clearHighlight()">Clear
-                Highlights</button>
-            <button style="background-color: #004F59; border-radius: 5px;color: white;" onclick="resetMarkers()">Group
-                Markers</button>
+    <div class="iframe-map-toolbar">
+        <div>
+            <button id="centeredViewButton1" style="background-color: #004F59; border-radius: 5px; color: white; border:0; padding:5px 10px; cursor:pointer;">View Home</button>
+            <button style="background-color: #004F59; border-radius: 5px; color: white; border:0; padding:5px 10px; cursor:pointer;" onclick="clearHighlight()">Clear Highlights</button>
+            <button style="background-color: #004F59; border-radius: 5px; color: white; border:0; padding:5px 10px; cursor:pointer;" onclick="resetMarkers()">Group Markers</button>
 
             <label for="spreadAdjustmentSlider" style="font-size:smaller;">Spread Offset:</label>
-            <input type="range" id="spreadAdjustmentSlider" min="1" max="500" step="1" value="250" style="width: 25%;">
+            <input type="range" id="spreadAdjustmentSlider" min="1" max="500" step="1" value="250" style="width: 140px;">
             <span id="spreadAdjustmentValue" style="font-size:smaller;">50</span>
         </div>
 
         <!-- Site Dropdown Menu -->
         <div>
             <select id="siteSelectionDropdown"
-                style="background-color: #004F59; margin-left: 10px; padding: 5px; border-radius: 5px;color:white;">
+                style="background-color: #004F59; padding: 5px; border-radius: 5px; color:white; border:0;">
                 <option value="">Select a site...</option>
             </select>
         </div>
@@ -104,6 +165,12 @@
 
     <div id="legend">
         <h3 style="margin: 0; padding-bottom: 5px;">Legend:</h3>
+    </div>
+
+    <div class="coord-readout">
+        <span id="coordLat">--</span>
+        <span style="opacity:0.6;">,</span>
+        <span id="coordLon">--</span>
     </div>
     <div id="logoContainer">
         <img src="" alt="Logo" id="logo-image">
@@ -196,7 +263,7 @@
                 scene3DOnly: true,
                 skyAtmosphere: false,
                 enableCollisionDetection: false,
-                navigationInstructionsInitiallyVisible: true,
+                navigationInstructionsInitiallyVisible: false,
                 baseLayer: Cesium.ImageryLayer.fromProviderAsync(arcGisImagery),
                 globe: new Cesium.Globe(Cesium.Ellipsoid.WGS84, {
                     minimumZoomDistance: 0.0
@@ -206,6 +273,21 @@
             viewer.scene.backgroundColor = Cesium.Color.BLACK;
             viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
             viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+            // Live lat/lon readout under the legend (mirrors EQ / Ground Failure viewers)
+            const coordLatEl = document.getElementById('coordLat');
+            const coordLonEl = document.getElementById('coordLon');
+            const coordEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            coordEventHandler.setInputAction(function (movement) {
+                const cartesian = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
+                if (cartesian) {
+                    const carto = Cesium.Cartographic.fromCartesian(cartesian);
+                    const lat = Cesium.Math.toDegrees(carto.latitude);
+                    const lon = Cesium.Math.toDegrees(carto.longitude);
+                    if (coordLatEl) coordLatEl.textContent = lat.toFixed(3);
+                    if (coordLonEl) coordLonEl.textContent = lon.toFixed(3);
+                }
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
             viewer.scene.screenSpaceCameraController.maximumZoomDistance = 10000000;
 
@@ -762,17 +844,16 @@
             window.document.getElementById('centeredViewButton1').addEventListener('click', centeredView);
 
             function centeredView() {
-                const lon = centerLon;
-                const lat = centerLat;
-
-                const width = MAP_BOUNDS.east - MAP_BOUNDS.west;
-                const height = MAP_BOUNDS.north - MAP_BOUNDS.south;
-                const maxDimension = Math.max(width, height);
-
-                const estimatedHeight = maxDimension * 111000 * zoomOutFactor;
-
+                // Fit the camera to the MAP_BOUNDS rectangle with a 1-degree padding on each side
+                // so all four corners stay visible on first paint.
+                const pad = 1.0;
                 viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, estimatedHeight),
+                    destination: Cesium.Rectangle.fromDegrees(
+                        MAP_BOUNDS.west - pad,
+                        MAP_BOUNDS.south - pad,
+                        MAP_BOUNDS.east + pad,
+                        MAP_BOUNDS.north + pad
+                    ),
                     orientation: {
                         heading: 0.0,
                         pitch: Cesium.Math.toRadians(-90.0),
