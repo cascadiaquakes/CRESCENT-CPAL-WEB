@@ -121,10 +121,7 @@ tr:nth-child(even) {
     width: 350px;
 }
 
-.filterToggleBtn {
-    display: block;
-    color: black;
-}
+/* .filterToggleBtn styles live in cpal.css (modern card variant) */
 
 /* Filter controls */
 #filterControls {
@@ -265,21 +262,7 @@ label {
     padding: 5px 5px 5px 15px;
 }
 
-/* Three-column layout */
-.three-column-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.column {
-    flex: 1;
-    min-width: 200px;
-    align-self: flex-start;
-}
+/* .three-column-container and .column styles live in cpal.css (CSS grid variant) */
 
 /* Legend */
 #legend {

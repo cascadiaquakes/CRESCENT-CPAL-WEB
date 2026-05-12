@@ -3,6 +3,8 @@
 {% block style%}
 <link rel="stylesheet" href="/static/css/repository.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider/distribute/nouislider.min.css">
+<script src="https://cdn.jsdelivr.net/npm/nouislider/distribute/nouislider.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Unique flag only for this page
@@ -35,177 +37,114 @@
 
 {% endblock %}
 {% block description %}
-<div class="info-message">
-</div>
-<div class="description">
-
-    <h2>CPAL Paleoseismic Compilation</h2>
-
-    <p>The Paleoseismology Group at Cascadia Quakes specializes in studying past earthquake events through geological
-        evidence,
-        enhancing our understanding of seismic hazards in the Cascadia Subduction Zone. Our research focuses on
-        analyzing
-        ancient fault lines, sediment layers, and other geological markers to improve predictions of future seismic
-        activity and
-        to inform strategies for earthquake preparedness and risk mitigation.</p>
-    <p>
-        The map on this page displays the USGS and CPAL's <a
-            href="https://www.sciencebase.gov/catalog/item/64261ec8d34e370832ff6232" target="_blank">latest
-            compilation</a> of
-        paleoseismic proxies, represented by distinct symbols and colors. Click on a marker to explore its associated
-        dataset. Use the map controls below to refine
-        the display and focus on your desired dataset (click on <strong><span style="color:red;">▶</span>
-            Show/Hide
-            Dataset
-            & Plot Controls</strong> to toggle the controls). As you
-        zoom in and encounter overlapping markers, right-click near the marker cluster to spread out the markers.
-        Right-click
-        again to return the markers to their original positions.
-    </p>
-    <p>
-        Additional controls above the map include:
-    </p>
-    <ul>
-        <li><strong>View Home</strong> – Resets the map zoom and viewport to the default setting.</li>
-        <li><strong>Clear Highlight</strong> – Removes highlights from all previously highlighted markers.</li>
-        <li><strong>Group Markers</strong> – Returns markers that have been spread out back to their original positions
-            (similar to a second right-click).</li>
-        <li><strong>Spread Offset</strong> – Adjusts the distance between spread-out markers, allowing you to fine-tune
-            based on zoom level.</li>
-        <li><strong>Select a Site</strong> (dropdown) – Zooms in to a selected site from the list.</li>
-    </ul>
-
-</div>
+<div class="info-message"></div>
 {% endblock %}
 {% block filter %}
-<div id="toggleFilterPanel" onclick="toggleFilterPanel()" class="filterToggleBtn">
-    <span style="color: red;">&#9660;&nbsp;</span>Show/Hide Dataset &amp; Plot Controls
-</div>
-<div id="filterPanel" style="display:block;">
-    <div id="controlContainer">
+<div class="card-2d">
+    <div class="card-2d-title">Paleoseismic Datasets</div>
 
-        <div class="three-column-container">
-            <!-- Column 1 -->
-            <div class="column">
-                <h3>Data:</h3>
-                <div id="fileTable" class="modelSelect"><b>Selected Dataset(s):</b>
-                    <div id="datasetContainer" style="margin-top: 5pt;"></div>
-                </div>
-                <div class="sliderContainer" style="font-weight: bold; display:block;"></div>
-                <div style="margin-top: 10px;">
-                    <label for="latRange">Latitude Range:</label>
-                    <input type="number" id="latMinSlider" step="0.1" style="width: 80px;">°
-                    to
-                    <input type="number" id="latMaxSlider" step="0.1" style="width: 80px;">°
-                </div>
-
-                <div style="margin-top: 10px;">
-                    <label for="lonRange">Longitude Range:</label>
-                    <input type="number" id="lonMinSlider" step="0.1" style="width: 80px;">°
-                    to
-                    <input type="number" id="lonMaxSlider" step="0.1" style="width: 80px;">°
-                </div>
+    <!-- DATA section (selected datasets only) -->
+    <div class="accordion-section open">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">DATA</span>
+        </button>
+        <div class="accordion-body">
+            <div class="field-row">
+                <label for="datasetContainer">Selected Dataset(s)</label>
+                <div id="datasetContainer" style="margin-top:6px;"></div>
             </div>
+            <div class="sliderContainer" style="font-weight:bold; display:block;"></div>
+        </div>
+    </div>
 
-            <!-- Column 2 -->
-            <div class="column">
-                <h3>Filters:</h3>
+    <!-- LATITUDE slider (matches CFM noUiSlider pattern) -->
+    <div class="accordion-section open">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">LATITUDE (&deg;NORTH)</span>
+            <span class="accordion-range">
+                <span id="minLatValue">39.0&deg;</span> &ndash; <span id="maxLatValue">52.0&deg;</span>
+            </span>
+        </button>
+        <div class="accordion-body">
+            <div id="latitudeSlider" class="accordion-slider"></div>
+            <!-- Hidden inputs preserve the original IDs the existing JS reads from -->
+            <input type="hidden" id="latMinSlider" value="39">
+            <input type="hidden" id="latMaxSlider" value="52">
+        </div>
+    </div>
 
-                <div style="margin-top: 10px;">
-                    <label for="siteEvidenceRankFilter">Site-Averaged Evidence Rank:</label>
-                    <select id="siteEvidenceRankFilter">
-                        <option value="0" selected>Show All (0+)</option>
-                        <option value="1">1+</option>
-                        <option value="2">2+</option>
-                        <option value="3">3+</option>
-                    </select>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label for="ageRankFilter">Age Rank:</label>
-                    <select id="ageRankFilter">
-                        <option value="0" selected>Show All (0+)</option>
-                        <option value="1">1+</option>
-                        <option value="2">2+</option>
-                        <option value="3">3+</option>
-                        <option value="4">4+</option>
-                        <option value="5">5+</option>
-                    </select>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label for="evidenceRankFilter">Evidence Rank:</label>
-                    <select id="evidenceRankFilter">
-                        <option value="0" selected>Show All (0+)</option>
-                        <option value="1">1+</option>
-                        <option value="2">2+</option>
-                        <option value="3">3+</option>
-                    </select>
-                </div>
+    <!-- LONGITUDE slider -->
+    <div class="accordion-section open">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">LONGITUDE (&deg;EAST)</span>
+            <span class="accordion-range">
+                <span id="minLonValue">-130.0&deg;</span> &ndash; <span id="maxLonValue">-116.0&deg;</span>
+            </span>
+        </button>
+        <div class="accordion-body">
+            <div id="longitudeSlider" class="accordion-slider"></div>
+            <input type="hidden" id="lonMinSlider" value="-130">
+            <input type="hidden" id="lonMaxSlider" value="-116">
+        </div>
+    </div>
+
+    <!-- FILTERS section (open by default per user preference) -->
+    <div class="accordion-section open">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">FILTERS</span>
+        </button>
+        <div class="accordion-body">
+            <div class="field-row">
+                <label for="siteEvidenceRankFilter">Site-Averaged Evidence Rank</label>
+                <select id="siteEvidenceRankFilter">
+                    <option value="0" selected>Show All (0+)</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                </select>
             </div>
-
-            <!-- Column 3 -->
-            <div class="column">
-                <h3>Plot:</h3>
-
-                <div>
-                    <label for="xAxisSelector">Chart Type:</label>
-                    <select id="xAxisSelector">
-                        <option value="events">Number of Events</option>
-                        <option value="length">Length of Record</option>
-                    </select>
-                </div>
-                <button id="downloadGeoJSON" style="width:51%;">Download Filtered Data\n(GeoJSON)</button>
-
-                <button id="toggleGuideButton" style="width:51%;" onclick="toggleGuide()">Help</button>
-                <div id="chartUserGuide" style="display: none; margin-top: 10px;">
-                    <h3>User Guide: Interactive Latitude Chart</h3>
-                    <p>
-                        The <strong>Interactive Latitude Chart</strong> allows you to visualize data
-                        distributions
-                        across latitude bins.
-                        You can customize the chart type to display either:
-                    </p>
-                    <ol>
-                        <li>
-                            <strong>Number of Events:</strong> The total count of events occurring within each
-                            latitude
-                            range.
-                        </li>
-                        <li>
-                            <strong>Length of Record:</strong> The cumulative length of records in
-                            <em>calibrated years BP (cal yr BP)</em> for events within each latitude range.
-                            This metric always uses the absolute value of the record length.
-                        </li>
-                    </ol>
-                    <p>To interact with the chart:</p>
-                    <ul>
-                        <li>
-                            <strong>Select chart type:</strong> Use the dropdown menu to choose between
-                            "Number of
-                            Events" or "Length of Record."
-                        </li>
-                        <li>
-                            <strong>View Details:</strong> Hover over bars in the chart to view detailed data
-                            for each
-                            latitude bin.
-                        </li>
-                    </ul>
-                    <p>
-                        The Y-axis represents latitude, with lower latitudes at the bottom and higher latitudes
-                        at the
-                        top.
-                        The X-axis dynamically adjusts based on the selected chart type. Use this chart to gain
-                        insights
-                        into spatial distributions and data trends related to your selected datasets.
-                    </p>
-                </div>
+            <div class="field-row">
+                <label for="ageRankFilter">Age Rank</label>
+                <select id="ageRankFilter">
+                    <option value="0" selected>Show All (0+)</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                    <option value="4">4+</option>
+                    <option value="5">5+</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label for="evidenceRankFilter">Evidence Rank</label>
+                <select id="evidenceRankFilter">
+                    <option value="0" selected>Show All (0+)</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                </select>
             </div>
         </div>
     </div>
+
+    <!-- Chart Type select moved to the Analytics panel (uses id=xAxisSelector there). -->
 </div>
 
-
-
-</div>
+<!-- Export Data card (matches Ground Failure pattern: helper text + prominent download button) -->
+<div class="card-2d export-card">
+    <div class="card-2d-title">Export Data</div>
+    <p class="export-helper">Download paleoseismic events matching the current applied filters as GeoJSON.</p>
+    <button id="downloadGeoJSON" class="btn-export-large" type="button" title="Download filtered events as GeoJSON">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Download GeoJSON</span>
+    </button>
 </div>
 {% endblock %}
 {% block leftpanel %}
@@ -216,13 +155,106 @@
 </div>
 {% endblock %}
 {% block rightpanel %}
-<div id="contentPanel">
-    <span id="cmodelname" style="display:none;"></span>CRESCENT Paleoseismic Dataset(s)
-    <div id="results-panel" class="action_side" style="flex:0 0 67.5%;">
-        <iframe src="/map3d" width="99.5%" height="1200px" id="3dIframe"
-            sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+<span id="cmodelname" style="display:none;"></span>
+<iframe src="/map3d" id="3dIframe" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+{% endblock %}
+
+{% block body %}
+<div id="viewer2dWrapper">
+    <!-- Full-bleed map (iframe to CPAL's /map3d Cesium page) -->
+    <div id="mapContainer">
+        {{ self.rightpanel() }}
     </div>
+
+    <!-- Mobile toggle for sidebar -->
+    <button id="toggleSidebar" class="btn-toggle-sidebar" type="button" title="Show/Hide Controls">&#9776;</button>
+
+    <!-- Floating sidebar over the map -->
+    <div id="sidebarPanel">
+        {{ self.filter() }}
+    </div>
+
+    <!-- Map Tools toggle button (bottom-right, stacked above Analytics) -->
+    <button type="button" class="btn-show-map-tools" id="showMapToolsBtn" onclick="toggleMapToolsPopup()" title="Map tools" aria-label="Map tools">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+    </button>
+
+    <!-- Map Tools popup (floats up-left from the button) -->
+    <div class="map-tools-popup" id="mapToolsPopup">
+        <div class="map-tools-header">
+            <span>Map Tools</span>
+            <button type="button" class="map-tools-close" onclick="closeMapToolsPopup()" aria-label="Close">&times;</button>
+        </div>
+        <div class="map-tools-body">
+            <div class="map-tools-buttons">
+                <button type="button" class="btn-tool" onclick="mapAction('home')">View Home</button>
+                <button type="button" class="btn-tool" onclick="mapAction('clearHighlight')">Clear Highlights</button>
+                <button type="button" class="btn-tool" onclick="mapAction('resetMarkers')">Group Markers</button>
+            </div>
+
+            <div class="field-row">
+                <label for="parentSpreadOffset">Spread Offset</label>
+                <div class="range-inputs" style="gap:10px;">
+                    <input type="range" id="parentSpreadOffset" min="1" max="500" step="1" value="250" oninput="setSpreadOffset(this.value)" style="flex:1;">
+                    <span id="parentSpreadOffsetVal" class="accordion-range">50</span>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <label for="parentSiteSelect">Select a Site</label>
+                <select id="parentSiteSelect" onchange="setSite(this.value)">
+                    <option value="">Select a site...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics toggle button (bottom-right icon, mirrors EQ viewer) -->
+    <button type="button" class="btn-show-analytics" id="showAnalyticsBtn" onclick="openAnalyticsPanel()" title="Analytics dashboard" aria-label="Analytics dashboard">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <rect x="7" y="12" width="2.6" height="5.5" rx="0.9" fill="currentColor"/>
+            <rect x="11" y="9" width="2.6" height="8.5" rx="0.9" fill="currentColor"/>
+            <rect x="15" y="6.5" width="2.6" height="11" rx="0.9" fill="currentColor"/>
+        </svg>
+    </button>
+
+    <!-- Analytics side panel (slides in from right; contains the latitude chart) -->
+    <div class="analytics-panel" id="analyticsPanel">
+        <div class="analytics-panel-header">
+            <h3>Analytics</h3>
+            <button type="button" class="btn-close-analytics" onclick="closeAnalyticsPanel()" aria-label="Close">&times;</button>
+        </div>
+        <div class="analytics-panel-body">
+            <div class="analytics-chart-block">
+                <div class="analytics-chart-row">
+                    <h4 class="analytics-chart-title">Latitude Distribution</h4>
+                    <select id="xAxisSelector" class="analytics-inline-select">
+                        <option value="events">Number of Events</option>
+                        <option value="length">Length of Record</option>
+                    </select>
+                </div>
+                {{ self.leftpanel() }}
+            </div>
+            <div class="analytics-help">
+                <h5>About this chart</h5>
+                <p>The chart visualizes paleoseismic data distributions across latitude bins. Switch between:</p>
+                <ul>
+                    <li><strong>Number of Events</strong> &mdash; total count within each latitude range.</li>
+                    <li><strong>Length of Record</strong> &mdash; cumulative record length in <em>calibrated years BP</em>.</li>
+                </ul>
+                <p>Hover bars to inspect each latitude bin. Y-axis is latitude (lower at bottom).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backdrop for analytics panel (mobile) -->
+    <div class="analytics-backdrop" id="analyticsBackdrop" onclick="closeAnalyticsPanel()"></div>
 </div>
+{{ self.scripts() }}
 {% endblock %}
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -230,6 +262,103 @@
 <script src="/static/config/project.js"></script>
 <script>
     // --- UI helpers ---
+
+    function toggleAccordion(headerEl) {
+        const section = headerEl && headerEl.closest(".accordion-section");
+        if (section) section.classList.toggle("open");
+    }
+
+    function openAnalyticsPanel() {
+        document.getElementById("analyticsPanel")?.classList.add("open");
+        document.getElementById("analyticsBackdrop")?.classList.add("show");
+    }
+
+    function closeAnalyticsPanel() {
+        document.getElementById("analyticsPanel")?.classList.remove("open");
+        document.getElementById("analyticsBackdrop")?.classList.remove("show");
+    }
+
+    // ── Map Tools popup (bridges to hidden iframe controls) ──
+    function getMapFrame() {
+        const iframe = document.getElementById("3dIframe");
+        return iframe && iframe.contentWindow ? iframe.contentWindow : null;
+    }
+
+    function getMapDoc() {
+        const iframe = document.getElementById("3dIframe");
+        return iframe && iframe.contentDocument ? iframe.contentDocument : null;
+    }
+
+    function toggleMapToolsPopup() {
+        const popup = document.getElementById("mapToolsPopup");
+        if (!popup) return;
+        const willOpen = !popup.classList.contains("open");
+        popup.classList.toggle("open");
+        if (willOpen) syncSiteOptions();
+    }
+
+    function closeMapToolsPopup() {
+        document.getElementById("mapToolsPopup")?.classList.remove("open");
+    }
+
+    function syncSiteOptions() {
+        // Copy the iframe's dynamically-populated <select> options into our parent dropdown.
+        const doc = getMapDoc();
+        if (!doc) return;
+        const ifr = doc.getElementById("siteSelectionDropdown");
+        const parent = document.getElementById("parentSiteSelect");
+        if (!ifr || !parent) return;
+        if (parent.options.length <= 1 && ifr.options.length > 1) {
+            parent.innerHTML = ifr.innerHTML;
+        }
+    }
+
+    function mapAction(name) {
+        const win = getMapFrame();
+        const doc = getMapDoc();
+        if (!win || !doc) return;
+        if (name === "home") {
+            const btn = doc.getElementById("centeredViewButton1");
+            if (btn) btn.click();
+        } else if (name === "clearHighlight" && typeof win.clearHighlight === "function") {
+            win.clearHighlight();
+        } else if (name === "resetMarkers" && typeof win.resetMarkers === "function") {
+            win.resetMarkers();
+        }
+    }
+
+    function setSpreadOffset(value) {
+        const doc = getMapDoc();
+        if (doc) {
+            const slider = doc.getElementById("spreadAdjustmentSlider");
+            if (slider) {
+                slider.value = value;
+                slider.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        }
+        const span = document.getElementById("parentSpreadOffsetVal");
+        if (span) span.textContent = value;
+    }
+
+    function setSite(value) {
+        const doc = getMapDoc();
+        if (!doc) return;
+        const ifr = doc.getElementById("siteSelectionDropdown");
+        if (ifr) {
+            ifr.value = value;
+            ifr.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const sidebarBtn = document.getElementById("toggleSidebar");
+        const sidebar = document.getElementById("sidebarPanel");
+        if (sidebarBtn && sidebar) {
+            sidebarBtn.addEventListener("click", function () {
+                sidebar.classList.toggle("hidden");
+            });
+        }
+    });
 
     function toggleGuide() {
         const guideDiv = document.getElementById("chartUserGuide");
@@ -730,77 +859,74 @@
         });
     }
 
-    // Initialize lat/lon sliders using MAP_BOUNDS
+    // Initialize lat/lon dual-thumb sliders (noUiSlider) using MAP_BOUNDS.
+    // The hidden #latMinSlider / #latMaxSlider / #lonMinSlider / #lonMaxSlider inputs
+    // stay in DOM; their .value is kept in sync by the slider's update handler so
+    // the rest of the existing JS (filterDataByRange, plotData, etc.) keeps working.
     function initializeSliders() {
         if (typeof MAP_BOUNDS === "undefined") {
             console.error("MAP_BOUNDS is not defined. Retrying in 100ms...");
             setTimeout(initializeSliders, 100);
             return;
         }
-
-        const latMinSlider = document.getElementById("latMinSlider");
-        const latMaxSlider = document.getElementById("latMaxSlider");
-        const lonMinSlider = document.getElementById("lonMinSlider");
-        const lonMaxSlider = document.getElementById("lonMaxSlider");
+        if (typeof noUiSlider === "undefined") {
+            console.error("noUiSlider library not loaded.");
+            return;
+        }
 
         const south = MAP_BOUNDS.south;
         const north = MAP_BOUNDS.north;
         const west = MAP_BOUNDS.west;
         const east = MAP_BOUNDS.east;
 
-        latMinSlider.min = south;
-        latMinSlider.max = north;
-        latMinSlider.value = south;
+        const latSliderEl = document.getElementById("latitudeSlider");
+        const lonSliderEl = document.getElementById("longitudeSlider");
+        const latMin = document.getElementById("latMinSlider");
+        const latMax = document.getElementById("latMaxSlider");
+        const lonMin = document.getElementById("lonMinSlider");
+        const lonMax = document.getElementById("lonMaxSlider");
+        const minLatLabel = document.getElementById("minLatValue");
+        const maxLatLabel = document.getElementById("maxLatValue");
+        const minLonLabel = document.getElementById("minLonValue");
+        const maxLonLabel = document.getElementById("maxLonValue");
 
-        latMaxSlider.min = south;
-        latMaxSlider.max = north;
-        latMaxSlider.value = north;
+        if (latSliderEl && !latSliderEl.noUiSlider) {
+            noUiSlider.create(latSliderEl, {
+                start: [south, north],
+                connect: true,
+                range: { min: south, max: north },
+                step: 0.1,
+            });
+            latSliderEl.noUiSlider.on("update", (values) => {
+                const lo = parseFloat(values[0]).toFixed(1);
+                const hi = parseFloat(values[1]).toFixed(1);
+                if (latMin) latMin.value = lo;
+                if (latMax) latMax.value = hi;
+                if (minLatLabel) minLatLabel.textContent = lo + "°";
+                if (maxLatLabel) maxLatLabel.textContent = hi + "°";
+            });
+            latSliderEl.noUiSlider.on("change", () => updatePlot());
+        }
 
-        lonMinSlider.min = west;
-        lonMinSlider.max = east;
-        lonMinSlider.value = west;
+        if (lonSliderEl && !lonSliderEl.noUiSlider) {
+            noUiSlider.create(lonSliderEl, {
+                start: [west, east],
+                connect: true,
+                range: { min: west, max: east },
+                step: 0.1,
+            });
+            lonSliderEl.noUiSlider.on("update", (values) => {
+                const lo = parseFloat(values[0]).toFixed(1);
+                const hi = parseFloat(values[1]).toFixed(1);
+                if (lonMin) lonMin.value = lo;
+                if (lonMax) lonMax.value = hi;
+                if (minLonLabel) minLonLabel.textContent = lo + "°";
+                if (maxLonLabel) maxLonLabel.textContent = hi + "°";
+            });
+            lonSliderEl.noUiSlider.on("change", () => updatePlot());
+        }
 
-        lonMaxSlider.min = west;
-        lonMaxSlider.max = east;
-        lonMaxSlider.value = east;
-
-        latMinSlider.addEventListener("change", () => {
-            let val = parseFloat(latMinSlider.value);
-            let val_max = parseFloat(latMaxSlider.value);
-            if (val < south) val = south;
-            if (val > val_max) val = val_max;
-            latMinSlider.value = val;
-            updatePlot();
-        });
-
-        latMaxSlider.addEventListener("change", () => {
-            let val = parseFloat(latMaxSlider.value);
-            let val_min = parseFloat(latMinSlider.value);
-            if (val > north) val = north;
-            if (val < val_min) val = val_min;
-            latMaxSlider.value = val;
-            updatePlot();
-        });
-
-        lonMinSlider.addEventListener("change", () => {
-            let val = parseFloat(lonMinSlider.value);
-            let val_max = parseFloat(lonMaxSlider.value);
-            if (val < west) val = west;
-            if (val > val_max) val = val_max;
-            lonMinSlider.value = val;
-            updatePlot();
-        });
-
-        lonMaxSlider.addEventListener("change", () => {
-            let val = parseFloat(lonMaxSlider.value);
-            let val_min = parseFloat(lonMinSlider.value);
-            if (val > east) val = east;
-            if (val < val_min) val = val_min;
-            lonMaxSlider.value = val;
-            updatePlot();
-        });
-
-        console.log("Sliders initialized with MAP_BOUNDS:", MAP_BOUNDS);
+        console.log("noUiSlider initialized with MAP_BOUNDS:", MAP_BOUNDS);
     }
 
     // Expose these for the iframe popup "X" button
