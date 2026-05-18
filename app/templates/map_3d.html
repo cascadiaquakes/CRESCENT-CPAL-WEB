@@ -1198,13 +1198,21 @@ style="background-color: white; color: #333333; border: none; padding: 5px 5px; 
 </div>`;
 
                             if (hasParent) {
-                                const parentDoc = window.parent.document;
-                                const fileTable = parentDoc.getElementById('infobox');
+                                const parentWin = window.parent;
+                                const parentDoc = parentWin.document;
+                                // Mutex: close Analytics + Map Tools before showing the popup.
+                                if (typeof parentWin.closeAnalyticsPanel === 'function') parentWin.closeAnalyticsPanel();
+                                if (typeof parentWin.closeMapToolsPopup === 'function') parentWin.closeMapToolsPopup();
+                                // Inject into a dedicated parent container so the popup is
+                                // separate from the latitude chart (#infobox lives in the
+                                // Analytics panel which is hidden by default).
+                                const popupHost = parentDoc.getElementById('markerPopupHost')
+                                    || parentDoc.getElementById('infobox');
 
-                                if (fileTable) {
-                                    fileTable.innerHTML = tableHtml;
+                                if (popupHost) {
+                                    popupHost.innerHTML = tableHtml;
                                 } else {
-                                    console.error("Element with ID 'infobox' not found in parent document.");
+                                    console.error("No popup host found in parent document.");
                                 }
                             } else {
                                 document.body.insertAdjacentHTML('beforeend', tableHtml);

@@ -133,18 +133,94 @@
     <!-- Chart Type select moved to the Analytics panel (uses id=xAxisSelector there). -->
 </div>
 
-<!-- Export Data card (matches Ground Failure pattern: helper text + prominent download button) -->
+<!-- Export Data card (filtered events; three format choices side-by-side) -->
 <div class="card-2d export-card">
     <div class="card-2d-title">Export Data</div>
-    <p class="export-helper">Download paleoseismic events matching the current applied filters as GeoJSON.</p>
-    <button id="downloadGeoJSON" class="btn-export-large" type="button" title="Download filtered events as GeoJSON">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        <span>Download GeoJSON</span>
-    </button>
+    <p class="export-helper">Download paleoseismic events matching the current applied filters.</p>
+    <div class="export-buttons-row">
+        <button id="downloadGeoJSON" class="btn-export-small" type="button" onclick="downloadFiltered('geojson')" title="Download as GeoJSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>GeoJSON</span>
+        </button>
+        <button class="btn-export-small" type="button" onclick="downloadFiltered('json')" title="Download as JSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>JSON</span>
+        </button>
+        <button class="btn-export-small" type="button" onclick="downloadFiltered('csv')" title="Download as CSV">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>CSV</span>
+        </button>
+    </div>
+</div>
+
+<!-- Dataset Files card (raw datasets + column descriptions, grouped per category) -->
+<div class="card-2d dataset-files-card">
+    <div class="card-2d-title">Dataset Files</div>
+    <p class="export-helper">Download raw paleoseismic datasets and their column descriptions.</p>
+
+    <div class="accordion-section">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">COASTAL DEFORMATION</span>
+        </button>
+        <div class="accordion-body">
+            <div class="dataset-files">
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Coastal_Deformation_Data_Compilation_TLDR.geojson">GeoJSON dataset</button>
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Coastal_Deformation_Data_Compilation_cell_descriptions.json">Column descriptions (JSON)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-section">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">MARINE SHAKING</span>
+        </button>
+        <div class="accordion-body">
+            <div class="dataset-files">
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Marine_Shaking_Data_Compilation_TLDR.geojson">GeoJSON dataset</button>
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Marine_Shaking_Data_Compilation_cell_descriptions.json">Column descriptions (JSON)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-section">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">TERRESTRIAL SHAKING</span>
+        </button>
+        <div class="accordion-body">
+            <div class="dataset-files">
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Terrestrial_Shaking_Data_Compilation_TLDR.geojson">GeoJSON dataset</button>
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Terrestrial_Shaking_Data_Compilation_cell_descriptions.json">Column descriptions (JSON)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-section">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">TSUNAMI</span>
+        </button>
+        <div class="accordion-body">
+            <div class="dataset-files">
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Tsunami_Data_Compilation_TLDR.geojson">GeoJSON dataset</button>
+                <button class="btn-dataset-file dropdown-download" type="button" data-dl="https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Tsunami_Data_Compilation_cell_descriptions.json">Column descriptions (JSON)</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block leftpanel %}
@@ -253,6 +329,9 @@
 
     <!-- Backdrop for analytics panel (mobile) -->
     <div class="analytics-backdrop" id="analyticsBackdrop" onclick="closeAnalyticsPanel()"></div>
+
+    <!-- Marker click popup host (iframe injects the events table here) -->
+    <div id="markerPopupHost"></div>
 </div>
 {{ self.scripts() }}
 {% endblock %}
@@ -269,6 +348,9 @@
     }
 
     function openAnalyticsPanel() {
+        // Mutually exclusive with Map Tools popup and marker click popup.
+        closeMapToolsPopup();
+        closeMarkerPopup();
         document.getElementById("analyticsPanel")?.classList.add("open");
         document.getElementById("analyticsBackdrop")?.classList.add("show");
     }
@@ -277,6 +359,16 @@
         document.getElementById("analyticsPanel")?.classList.remove("open");
         document.getElementById("analyticsBackdrop")?.classList.remove("show");
     }
+
+    // Clears the marker click popup. Called by openAnalyticsPanel / toggleMapToolsPopup
+    // and exposed on window so the iframe can also call it.
+    function closeMarkerPopup() {
+        const host = document.getElementById("markerPopupHost");
+        if (host) host.innerHTML = "";
+    }
+    window.closeMarkerPopup = closeMarkerPopup;
+    window.closeAnalyticsPanel = closeAnalyticsPanel;
+    window.closeMapToolsPopup = closeMapToolsPopup;
 
     // ── Map Tools popup (bridges to hidden iframe controls) ──
     function getMapFrame() {
@@ -294,7 +386,12 @@
         if (!popup) return;
         const willOpen = !popup.classList.contains("open");
         popup.classList.toggle("open");
-        if (willOpen) syncSiteOptions();
+        if (willOpen) {
+            // Mutually exclusive with Analytics panel and marker click popup.
+            closeAnalyticsPanel();
+            closeMarkerPopup();
+            syncSiteOptions();
+        }
     }
 
     function closeMapToolsPopup() {
@@ -783,80 +880,103 @@
     }
 
     // Download currently filtered GeoJSON (all selected datasets, filtered to lat/lon)
-    function downloadGeoJSON() {
-        function getFilteredGeoJSON() {
-            const selectedValues = getSelectedDatasetValues();
-            let filteredFeatures = [];
-
-            if (!selectedValues || selectedValues.length === 0) {
-                console.warn("No datasets selected. Download will be empty.");
-                return Promise.resolve({ type: "FeatureCollection", features: [] });
-            }
-
-            console.log("Fetching datasets for GeoJSON download:", selectedValues);
-
-            const geojsonFetchPromises = selectedValues.map(value => {
-                const geojsonUrl = GEOJSON_URLS[value];
-
-                if (!geojsonUrl) {
-                    console.warn("No GEOJSON_URL for dataset:", value);
-                    return Promise.resolve();
-                }
-
-                return fetch(geojsonUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Failed to load ${geojsonUrl}`);
-                        }
-                        return response.json();
-                    })
-                    .then(geojson => {
-                        filteredFeatures.push(...filterDataByRange(geojson.features));
-                    })
-                    .catch(error => {
-                        console.error(`Error fetching ${geojsonUrl}:`, error);
-                    });
-            });
-
-            return Promise.all(geojsonFetchPromises).then(() => {
-                console.log(`Filtered features count: ${filteredFeatures.length}`);
-                return {
-                    type: "FeatureCollection",
-                    features: filteredFeatures
-                };
-            });
+    // Fetch + filter features across all selected datasets.
+    function getFilteredFeatures() {
+        const selectedValues = getSelectedDatasetValues();
+        if (!selectedValues || selectedValues.length === 0) {
+            return Promise.resolve([]);
         }
 
-        getFilteredGeoJSON().then(filteredGeoJSON => {
-            if (!filteredGeoJSON || !filteredGeoJSON.features || filteredGeoJSON.features.length === 0) {
-                console.warn("No data available for download.");
+        const fetchPromises = selectedValues.map(value => {
+            const url = GEOJSON_URLS[value];
+            if (!url) return Promise.resolve([]);
+            return fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error("Failed to load " + url);
+                    return r.json();
+                })
+                .then(g => filterDataByRange(g.features || []))
+                .catch(err => { console.error("Fetch error:", err); return []; });
+        });
+
+        return Promise.all(fetchPromises).then(arrays => arrays.flat());
+    }
+
+    // ---- Format converters ----
+    function featuresToGeoJSON(features) {
+        return JSON.stringify({ type: "FeatureCollection", features }, null, 2);
+    }
+
+    function featuresToJSON(features) {
+        return JSON.stringify(features.map(f => ({
+            lat: f.geometry && f.geometry.coordinates ? f.geometry.coordinates[1] : null,
+            lon: f.geometry && f.geometry.coordinates ? f.geometry.coordinates[0] : null,
+            ...(f.properties || {})
+        })), null, 2);
+    }
+
+    function featuresToCSV(features) {
+        if (features.length === 0) return "";
+        const keys = new Set(["lat", "lon"]);
+        features.forEach(f => Object.keys(f.properties || {}).forEach(k => keys.add(k)));
+        const keysArr = Array.from(keys);
+        const esc = v => {
+            if (v == null) return "";
+            const s = String(v);
+            return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        };
+        const header = keysArr.map(esc).join(",");
+        const rows = features.map(f => {
+            const row = {
+                lat: f.geometry && f.geometry.coordinates ? f.geometry.coordinates[1] : null,
+                lon: f.geometry && f.geometry.coordinates ? f.geometry.coordinates[0] : null,
+                ...(f.properties || {})
+            };
+            return keysArr.map(k => esc(row[k])).join(",");
+        });
+        return [header, ...rows].join("\n");
+    }
+
+    function downloadBlob(content, mime, filename) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Main export entry point: format is 'geojson' | 'json' | 'csv'.
+    function downloadFiltered(format) {
+        getFilteredFeatures().then(features => {
+            if (features.length === 0) {
+                alert("No data matches the current filters.");
                 return;
             }
-
-            console.log(`Preparing to download ${filteredGeoJSON.features.length} features...`);
-
             try {
-                const geojsonStr = JSON.stringify(filteredGeoJSON, null, 2);
-                const blob = new Blob([geojsonStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "filtered_data.geojson";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                console.log("Download completed successfully.");
-            } catch (error) {
-                console.error("Error generating GeoJSON file:", error);
-                alert("Error generating GeoJSON file.");
+                if (format === "geojson") {
+                    downloadBlob(featuresToGeoJSON(features), "application/geo+json", "filtered_data.geojson");
+                } else if (format === "json") {
+                    downloadBlob(featuresToJSON(features), "application/json", "filtered_data.json");
+                } else if (format === "csv") {
+                    downloadBlob(featuresToCSV(features), "text/csv;charset=utf-8", "filtered_data.csv");
+                }
+            } catch (err) {
+                console.error("Download generation failed:", err);
+                alert("Download failed: " + err.message);
             }
-        }).catch(error => {
-            console.error("Error in GeoJSON processing:", error);
-            alert("Failed to download GeoJSON.");
+        }).catch(err => {
+            console.error("Download failed:", err);
+            alert("Download failed: " + err.message);
         });
+    }
+
+    // Backward-compat wrapper (existing button has id=downloadGeoJSON + click listener)
+    function downloadGeoJSON() {
+        downloadFiltered("geojson");
     }
 
     // Initialize lat/lon dual-thumb sliders (noUiSlider) using MAP_BOUNDS.
