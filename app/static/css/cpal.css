@@ -198,6 +198,38 @@ option {
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* Wider dropdown for the Data download menu */
+.dropdown.dropdown-wide {
+    min-width: 260px;
+    padding-bottom: 6px;
+}
+
+.dropdown-group-label {
+    padding: 8px 16px 2px;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.dropdown.dropdown-wide li a {
+    padding-left: 24px;
+}
+
+.dropdown.dropdown-wide .dropdown-divider + li a {
+    padding-left: 16px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 6px 12px;
+    pointer-events: none;
+}
+
 /* ── Info message ── */
 .info-message {
     color: maroon;
@@ -755,7 +787,7 @@ option {
     position: absolute;
     bottom: 16px;
     right: 16px;
-    z-index: 100;
+    z-index: 200;
     width: 44px;
     height: 44px;
     background: #ffffff;
@@ -789,7 +821,7 @@ option {
     top: 0;
     bottom: 0;
     right: 0;
-    width: min(440px, 92vw);
+    width: min(540px, 92vw);
     background: #ffffff;
     box-shadow: -6px 0 24px rgba(0, 0, 0, 0.15);
     z-index: 15;
@@ -847,10 +879,9 @@ option {
 }
 
 .analytics-chart-block {
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 12px 14px;
-    background: #ffffff;
+    padding: 0;
+    background: transparent;
+    border: 0;
 }
 
 .analytics-chart-row {
@@ -858,7 +889,7 @@ option {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .analytics-chart-title {
@@ -879,22 +910,64 @@ option {
     color: #0f172a;
 }
 
+/* Marker click popup (injected by the iframe via window.parent.document) */
+#markerPopupHost {
+    /* Wrapper itself is just a placeholder; the popup is positioned by #popupContainer */
+}
+
+#markerPopupHost:empty {
+    display: none;
+}
+
+/* When the iframe injects content, the inner #popupContainer is positioned.
+   Inline `style="width:100%"` on the popup HTML requires !important to override. */
+#viewer2dWrapper #popupContainer {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 480px !important;
+    max-width: calc(100vw - 32px);
+    /* Leave ~140px of breathing room at the bottom so the popup never reaches
+       the bottom-right Analytics / Map Tools buttons. */
+    max-height: calc(100vh - 260px) !important;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
+    padding: 0 !important;
+}
+
+/* Override repository.css' legacy #fileListPanel rule (height:1600px, width:47.5%, border)
+   that bloats the analytics panel with empty space and a stray border. */
 .analytics-chart-block #fileListPanel,
 .analytics-chart-block #infobox {
-    width: 100%;
+    width: 100% !important;
+    height: auto !important;
+    border: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
 }
 
 .analytics-chart-block #latitudeChart {
     width: 100% !important;
-    height: 700px !important;
+    height: 680px !important;
 }
 
 .analytics-help {
-    margin-top: 14px;
+    margin-top: 10px;
     padding: 12px 14px;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
     font-size: 12px;
     line-height: 1.5;
     color: #475569;
@@ -975,6 +1048,78 @@ option {
     flex-shrink: 0;
 }
 
+/* 3 export buttons side-by-side (matches EQ viewer's pattern with GeoJSON/CSV) */
+.export-buttons-row {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-export-small {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 9px 6px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #0b4a53 0%, #0d5a65 100%);
+    color: #ffffff;
+    border: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-export-small:hover {
+    background: linear-gradient(135deg, #0d5a65 0%, #0f6b78 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(11, 74, 83, 0.3);
+}
+
+.btn-export-small:active {
+    transform: translateY(0);
+}
+
+.btn-export-small svg {
+    flex-shrink: 0;
+}
+
+/* Dataset Files card: per-dataset accordion with two download buttons each */
+.dataset-files-card .accordion-section {
+    margin-bottom: 4px;
+}
+
+.dataset-files {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.btn-dataset-file {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #0b4a53;
+    border: 1px solid #cbd5e1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.btn-dataset-file:hover {
+    background: #e2e8f0;
+}
+
+.btn-dataset-file:active {
+    transform: translateY(1px);
+}
+
 /* ── noUiSlider styling (lifted from CFM main.css) ── */
 .accordion-slider {
     margin: 4px 0;
@@ -1036,7 +1181,7 @@ option {
     position: absolute;
     bottom: 68px;
     right: 16px;
-    z-index: 100;
+    z-index: 200;
     width: 44px;
     height: 44px;
     background: #ffffff;
