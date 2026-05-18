@@ -143,6 +143,15 @@ option {
     color: white;
 }
 
+/* Icon-only nav link (Home button): square footprint, centered icon */
+.nav-link.nav-icon {
+    padding: 6px 9px;
+}
+
+.nav-link.nav-icon svg {
+    display: block;
+}
+
 .chevron {
     font-size: 10px;
     transition: transform 0.2s;
