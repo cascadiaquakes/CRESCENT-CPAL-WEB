@@ -1367,15 +1367,5 @@ option {
     }
 }
 
-/* Cesium's baseLayerPicker button ships blank when the current imagery
-   provider has no thumbnail. Force a layers-stack icon in its place so
-   the top-right base-map control is discoverable. */
-.cesium-baseLayerPicker-selected {
-    background-color: rgba(38, 38, 38, 0.75);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 22px 22px;
-    border: 1px solid #444 !important;
-}
-.cesium-baseLayerPicker-selected img { display: none !important; }
+/* baseLayerPicker styling lives in view3d.css, next to the Cesium widgets
+   CSS that the map iframe actually loads. */
