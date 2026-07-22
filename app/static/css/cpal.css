@@ -782,10 +782,12 @@ option {
     padding-left: 18px;
 }
 
-/* Analytics button (bottom-right icon, mirrors EQ viewer .btn-show-analytics) */
+/* Analytics button (bottom-right icon, mirrors EQ viewer .btn-show-analytics).
+   Sits above Cesium's built-in fullscreen widget so the two icons don't
+   overlap. */
 .btn-show-analytics {
     position: absolute;
-    bottom: 16px;
+    bottom: 64px;
     right: 16px;
     z-index: 200;
     width: 44px;
@@ -1179,7 +1181,7 @@ option {
 /* Map Tools button (bottom-right, stacked above Analytics button) */
 .btn-show-map-tools {
     position: absolute;
-    bottom: 68px;
+    bottom: 116px;
     right: 16px;
     z-index: 200;
     width: 44px;
@@ -1364,3 +1366,16 @@ option {
         width: 100vw;
     }
 }
+
+/* Cesium's baseLayerPicker button ships blank when the current imagery
+   provider has no thumbnail. Force a layers-stack icon in its place so
+   the top-right base-map control is discoverable. */
+.cesium-baseLayerPicker-selected {
+    background-color: rgba(38, 38, 38, 0.75);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 22px 22px;
+    border: 1px solid #444 !important;
+}
+.cesium-baseLayerPicker-selected img { display: none !important; }
