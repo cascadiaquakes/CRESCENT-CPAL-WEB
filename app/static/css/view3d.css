@@ -159,18 +159,3 @@ label {
     z-index: 10000;
     /* Prevent the arrow from interfering with map interaction */
 }
-/* Cesium's baseLayerPicker button ships blank when the imagery provider has
-   no thumbnail (our default ArcGIS satellite provider), so the top-right
-   base-map toggle is invisible. Force a layers-stack SVG behind it and hide
-   whichever nested img Cesium would have painted. */
-.cesium-baseLayerPicker-selected {
-    background-color: rgba(38, 38, 38, 0.85) !important;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 22px 22px !important;
-}
-.cesium-baseLayerPicker-selectedImage,
-.cesium-baseLayerPicker-selected img {
-    opacity: 0 !important;
-}
