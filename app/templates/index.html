@@ -43,6 +43,22 @@
 <div class="card-2d">
     <div class="card-2d-title">Paleoseismic Datasets</div>
 
+    <!-- SITE selector (was buried in the bottom-right Map Tools popup — Tina) -->
+    <div class="accordion-section open">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">SITE</span>
+        </button>
+        <div class="accordion-body">
+            <div class="field-row">
+                <label for="parentSiteSelect" class="uppercase-label">Select a Site</label>
+                <select id="parentSiteSelect" onchange="setSite(this.value)">
+                    <option value="">Select a site...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <!-- DATA section (selected datasets only) -->
     <div class="accordion-section open">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
@@ -51,7 +67,7 @@
         </button>
         <div class="accordion-body">
             <div class="field-row">
-                <label for="datasetContainer">Selected Dataset(s)</label>
+                <label for="datasetContainer" class="uppercase-label">Selected Dataset(s)</label>
                 <div id="datasetContainer" style="margin-top:6px;"></div>
             </div>
             <div class="sliderContainer" style="font-weight:bold; display:block;"></div>
@@ -277,17 +293,12 @@
                     <span id="parentSpreadOffsetVal" class="accordion-range">50</span>
                 </div>
             </div>
-
-            <div class="field-row">
-                <label for="parentSiteSelect">Select a Site</label>
-                <select id="parentSiteSelect" onchange="setSite(this.value)">
-                    <option value="">Select a site...</option>
-                </select>
-            </div>
         </div>
     </div>
 
-    <!-- Analytics toggle button (bottom-right icon, mirrors EQ viewer) -->
+    <!-- Analytics toggle: small floating icon at the map's bottom-LEFT so it
+         sits next to the Cesium attribution area, per Tina's ask to move it
+         to the left side of the screen. -->
     <button type="button" class="btn-show-analytics" id="showAnalyticsBtn" onclick="openAnalyticsPanel()" title="Analytics dashboard" aria-label="Analytics dashboard">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
@@ -455,6 +466,17 @@
                 sidebar.classList.toggle("hidden");
             });
         }
+
+        // Poll for the iframe's site list until the sidebar SITE dropdown has
+        // been populated. Site selector used to live inside the Map Tools
+        // popup which triggered syncSiteOptions on open; now that it lives on
+        // the sidebar, nothing else fires the sync.
+        const siteSyncTimer = setInterval(() => {
+            syncSiteOptions();
+            const parent = document.getElementById("parentSiteSelect");
+            if (parent && parent.options.length > 1) clearInterval(siteSyncTimer);
+        }, 500);
+        setTimeout(() => clearInterval(siteSyncTimer), 15000);
     });
 
     function toggleGuide() {
