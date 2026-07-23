@@ -689,6 +689,35 @@ option {
     background: #ffffff;
 }
 
+/* Tighten multi-select options: neutralize grey highlight, tighten
+   line-height, use the sidebar's own font stack. Chrome respects most of
+   these on the native dropdown popup; a few properties still fall back to
+   browser default in some environments. */
+#datasetContainer select option {
+    padding: 2px 6px !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+}
+
+#datasetContainer select option:checked {
+    background: #ffffff !important;
+    color: #0b4a53 !important;
+    font-weight: 600 !important;
+}
+
+/* Uppercase label pattern used elsewhere in the sidebar. */
+.field-row label.uppercase-label,
+label.uppercase-label {
+    text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    font-size: 11px !important;
+}
+
 .accordion-header:hover {
     background: #f1f5f9;
 }
@@ -782,13 +811,14 @@ option {
     padding-left: 18px;
 }
 
-/* Analytics button (bottom-right icon, mirrors EQ viewer .btn-show-analytics).
-   Sits above Cesium's built-in fullscreen widget so the two icons don't
-   overlap. */
+/* Analytics button — moved to the map's bottom-LEFT so users don't need
+   to hunt for it in the bottom-right (Tina's feedback). Sits just to the
+   right of the sidebar (sidebar is 290px wide + 12px left inset) so it
+   floats on the map surface instead of overlapping sidebar cards. */
 .btn-show-analytics {
     position: absolute;
-    bottom: 64px;
-    right: 16px;
+    bottom: 44px;
+    left: 320px;
     z-index: 200;
     width: 44px;
     height: 44px;

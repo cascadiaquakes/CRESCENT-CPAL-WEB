@@ -356,14 +356,21 @@
                         viewer.entities.remove(existingOverlay);
                     }
 
+                    // Extent shown as a white outline only (no grey fill) so
+                    // river channels and vegetation stay visible when zoomed in.
                     selectionOverlay = viewer.entities.add({
                         id: "selectionOverlay",
-                        rectangle: {
-                            coordinates: Cesium.Rectangle.fromDegrees(lonMin, latMin, lonMax, latMax),
-                            material: new Cesium.Color(0.5, 0.5, 0.5, 0.5),
-                            outline: true,
-                            outlineColor: Cesium.Color.WHITE,
-                            outlineWidth: 2
+                        polyline: {
+                            positions: Cesium.Cartesian3.fromDegreesArray([
+                                lonMin, latMin,
+                                lonMax, latMin,
+                                lonMax, latMax,
+                                lonMin, latMax,
+                                lonMin, latMin
+                            ]),
+                            width: 2,
+                            material: Cesium.Color.WHITE,
+                            clampToGround: true
                         }
                     });
 
@@ -775,6 +782,9 @@
             const dropdown = document.createElement('select');
             dropdown.id = 'datasetDropdown';
             dropdown.multiple = true;
+            // Render as a compact dropdown, not a persistent list box, so
+            // it mirrors the Site selector's look until the user opens it.
+            dropdown.size = 1;
             dropdown.style.width = '100%';
             datasetContainer.appendChild(dropdown);
 
