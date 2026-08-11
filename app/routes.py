@@ -168,8 +168,8 @@ async def get_cesium_key(request: Request):
         return {"token": "your_access_token"}
     else:
         CESIUM_KEYS = json.loads(os.getenv("CESIUM_KEYS"))
-        access_token = CESIUM_KEYS["cesium_access_token"]
-        api_key = CESIUM_KEYS["arcgis_default_access_token"]
+        access_token = CESIUM_KEYS.get("cesium_access_token", "your_access_token")
+        api_key = CESIUM_KEYS.get("arcgis_default_access_token", "your_api_key")
         return {"token": access_token, "apikey": api_key}
 
 

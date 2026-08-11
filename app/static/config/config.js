@@ -11,12 +11,12 @@ const PROXIES = ["coastal", "terrestrial", "marine", "tsunami"];
 columnDefinitions = { "Contact Name": " stratigraphic contact or event identified in paleoseismic studies that may be equivalent to evidence for megathrust earthquakes. Other possible mechanisms are noted in the fields Inferred most likely evidence source and Other possible evidence source interpretations below" }
 
 // GeoJSON Configuration Arrays
-// Coastal_Deformation_Data_Compilation_TLDR.geojson
+// Coastal_Deformation_Data_Compilation_Condensed.geojson
 const GEOJSON_URLS = {
-    "coastal": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Coastal_Deformation_Data_Compilation_TLDR.geojson',
-    "marine": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Marine_Shaking_Data_Compilation_TLDR.geojson',
-    "terrestrial": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Terrestrial_Shaking_Data_Compilation_TLDR.geojson',
-    "tsunami": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Tsunami_Data_Compilation_TLDR.geojson',
+    "coastal": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Coastal_Deformation_Data_Compilation_Condensed.geojson',
+    "marine": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Marine_Shaking_Data_Compilation_Condensed.geojson',
+    "terrestrial": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Terrestrial_Shaking_Data_Compilation_Condensed.geojson',
+    "tsunami": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/Tsunami_Data_Compilation_Condensed.geojson',
 };
 
 const COLUMNS_DESCRIPTION = {
