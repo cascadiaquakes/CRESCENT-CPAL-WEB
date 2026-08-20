@@ -43,13 +43,12 @@
 <div class="card-2d">
     <div class="card-2d-title">Paleoseismic Datasets</div>
 
-    <!-- SITE selector (was buried in the bottom-right Map Tools popup — Tina) -->
-    <div class="accordion-section open">
-        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
-            <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">SITE</span>
-        </button>
-        <div class="accordion-body">
+    <!-- SITE selector — flat section like CVM's 3D Models, no accordion. -->
+    <div class="section-plain">
+        <div class="section-plain-header">
+            <span class="section-plain-title">Site</span>
+        </div>
+        <div class="section-plain-body">
             <div class="field-row">
                 <label for="parentSiteSelect" class="uppercase-label">Select a Site</label>
                 <select id="parentSiteSelect" onchange="setSite(this.value)">
@@ -59,13 +58,12 @@
         </div>
     </div>
 
-    <!-- DATA section (selected datasets only) -->
-    <div class="accordion-section open">
-        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
-            <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">DATA</span>
-        </button>
-        <div class="accordion-body">
+    <!-- DATA section (selected datasets) — flat section like CVM's 2D Models. -->
+    <div class="section-plain">
+        <div class="section-plain-header">
+            <span class="section-plain-title">Data</span>
+        </div>
+        <div class="section-plain-body">
             <div class="field-row">
                 <label for="datasetContainer" class="uppercase-label">Selected Dataset(s)</label>
                 <div id="datasetContainer" style="margin-top:6px;"></div>
@@ -78,7 +76,7 @@
     <div class="accordion-section open">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">LATITUDE (&deg;NORTH)</span>
+            <span class="accordion-label">Latitude (&deg;N)</span>
             <span class="accordion-range">
                 <span id="minLatValue">39.0&deg;</span> &ndash; <span id="maxLatValue">52.0&deg;</span>
             </span>
@@ -95,7 +93,7 @@
     <div class="accordion-section open">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">LONGITUDE (&deg;EAST)</span>
+            <span class="accordion-label">Longitude (&deg;E)</span>
             <span class="accordion-range">
                 <span id="minLonValue">-130.0&deg;</span> &ndash; <span id="maxLonValue">-116.0&deg;</span>
             </span>
@@ -111,7 +109,7 @@
     <div class="accordion-section open">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">FILTERS</span>
+            <span class="accordion-label">Filters</span>
         </button>
         <div class="accordion-body">
             <div class="field-row">
@@ -189,7 +187,7 @@
     <div class="accordion-section">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">COASTAL DEFORMATION</span>
+            <span class="accordion-label">Coastal Deformation</span>
         </button>
         <div class="accordion-body">
             <div class="dataset-files">
@@ -202,7 +200,7 @@
     <div class="accordion-section">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">MARINE SHAKING</span>
+            <span class="accordion-label">Marine Shaking</span>
         </button>
         <div class="accordion-body">
             <div class="dataset-files">
@@ -215,7 +213,7 @@
     <div class="accordion-section">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">TERRESTRIAL SHAKING</span>
+            <span class="accordion-label">Terrestrial Shaking</span>
         </button>
         <div class="accordion-body">
             <div class="dataset-files">
@@ -228,7 +226,7 @@
     <div class="accordion-section">
         <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
             <span class="accordion-arrow">&#9662;</span>
-            <span class="accordion-label">TSUNAMI</span>
+            <span class="accordion-label">Tsunami</span>
         </button>
         <div class="accordion-body">
             <div class="dataset-files">
