@@ -50,8 +50,7 @@
         </div>
         <div class="section-plain-body">
             <div class="field-row">
-                <label for="parentSiteSelect" class="uppercase-label">Select a Site</label>
-                <select id="parentSiteSelect" onchange="setSite(this.value)">
+                <select id="parentSiteSelect" aria-label="Select a site" onchange="setSite(this.value)">
                     <option value="">Select a site...</option>
                 </select>
             </div>
@@ -65,8 +64,7 @@
         </div>
         <div class="section-plain-body">
             <div class="field-row">
-                <label for="datasetContainer" class="uppercase-label">Selected Dataset(s)</label>
-                <div id="datasetContainer" style="margin-top:6px;"></div>
+                <div id="datasetContainer" style="margin-top:6px;" aria-label="Selected datasets"></div>
             </div>
             <div class="sliderContainer" style="font-weight:bold; display:block;"></div>
         </div>
