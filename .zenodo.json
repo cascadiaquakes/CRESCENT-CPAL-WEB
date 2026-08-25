@@ -1,0 +1,49 @@
+{
+  "title": "The Cascadia Region Earthquake Science Center (CRESCENT) Paleoseismology Repository and Viewer",
+  "description": "The Paleoseismology (CPAL) Repository and Viewer is a community-oriented, curated collection of paleoseismic data compilations developed within the CRESCENT cyberinfrastructure framework to support research, visualization, and analysis of Cascadia subduction zone paleoseismology. The repository standardizes paleoseismic records from the USGS Powell Center compilation (coastal deformation, marine shaking, terrestrial shaking, and tsunami evidence) into a consistent, machine-readable format. The accompanying interactive web-based CPAL Viewer (https://cpal.cascadiaquakes.org) allows users to explore, filter, and download paleoseismic records in real time. Comprehensive documentation, metadata standards, and submission guidelines are provided in the project's Jupyter Book (https://cascadiaquakes.github.io/cpal-book/).",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "CC-BY-4.0",
+  "creators": [
+    {
+      "name": "Marfo, William",
+      "affiliation": "Cascadia Region Earthquake Science Center, University of California, Davis"
+    },
+    {
+      "name": "Thomas, Amanda M.",
+      "affiliation": "Department of Earth and Planetary Sciences, University of California, Davis"
+    },
+    {
+      "name": "Bachelot, Loic",
+      "affiliation": "Cascadia Region Earthquake Science Center, University of Oregon"
+    }
+  ],
+  "keywords": [
+    "paleoseismology",
+    "Cascadia Subduction Zone",
+    "CRESCENT",
+    "coastal deformation",
+    "tsunami",
+    "marine turbidites",
+    "cyberinfrastructure",
+    "reproducible science",
+    "geospatial visualization"
+  ],
+  "grants": [
+    {
+      "id": "10.13039/100000001::2225286"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/cascadiaquakes/CRESCENT-CPAL-WEB",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isDocumentedBy",
+      "identifier": "https://cascadiaquakes.github.io/cpal-book/",
+      "resource_type": "publication-book"
+    }
+  ]
+}
