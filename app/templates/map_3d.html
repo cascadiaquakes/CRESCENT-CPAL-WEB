@@ -81,7 +81,8 @@
             height: 50px;
             background-image: url('/static/images/north_white.png');
             background-size: contain;
-            pointer-events: none;
+            cursor: grab;
+            touch-action: none;
             z-index: 10000;
         }
 
@@ -250,12 +251,16 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            const arcGisImagery = Cesium.ArcGisMapServerImageryProvider.fromBasemapType(Cesium.ArcGisBaseMapType.SATELLITE);
+            // Imagery layers our accounts can load. Sentinel-2, Blue Marble and Earth at night
+            // aren't in the Cesium ion account (404), and Stadia styles need an API key.
+            const workingImagery = Cesium.createDefaultImageryProviderViewModels().filter(function (vm) {
+                return !/Sentinel-2|Blue Marble|Earth at night|Stadia/i.test(vm.name);
+            });
+            const defaultImagery = workingImagery.find(function (vm) { return vm.name === 'ArcGIS World Imagery'; });
 
             console.log("Setting the viewer");
 
             const viewer = new Cesium.Viewer('cesiumContainer', {
-                imageryProvider: arcGisImagery,
                 depthPlaneEllipsoidOffset: 10000,
                 nearToFarRatio: 1e6,
                 farToNearRatio: 1e-6,
@@ -264,7 +269,9 @@
                 skyAtmosphere: false,
                 enableCollisionDetection: false,
                 navigationInstructionsInitiallyVisible: false,
-                baseLayer: Cesium.ImageryLayer.fromProviderAsync(arcGisImagery),
+                // Letting the layer picker own the base layer gives its button an icon.
+                imageryProviderViewModels: workingImagery,
+                selectedImageryProviderViewModel: defaultImagery,
                 globe: new Cesium.Globe(Cesium.Ellipsoid.WGS84, {
                     minimumZoomDistance: 0.0
                 })
@@ -881,6 +888,33 @@
 
             updateNorthArrow();
             viewer.scene.postRender.addEventListener(updateNorthArrow);
+
+            // Let users drag the north arrow off whatever it covers.
+            (function () {
+                const arrow = document.getElementById('northArrow');
+                let offsetX = 0, offsetY = 0;
+                arrow.title = 'Drag to move';
+                arrow.addEventListener('pointerdown', function (e) {
+                    // offsetLeft/Top ignore the heading rotation, so the arrow doesn't jump on grab.
+                    offsetX = e.clientX - arrow.offsetLeft;
+                    offsetY = e.clientY - arrow.offsetTop;
+                    arrow.setPointerCapture(e.pointerId);
+                    arrow.style.cursor = 'grabbing';
+                    e.preventDefault();
+                });
+                arrow.addEventListener('pointermove', function (e) {
+                    if (!arrow.hasPointerCapture(e.pointerId)) return;
+                    arrow.style.left = Math.min(Math.max(0, e.clientX - offsetX), window.innerWidth - arrow.offsetWidth) + 'px';
+                    arrow.style.top = Math.min(Math.max(0, e.clientY - offsetY), window.innerHeight - arrow.offsetHeight) + 'px';
+                    arrow.style.right = 'auto';
+                });
+                function endDrag(e) {
+                    if (arrow.hasPointerCapture(e.pointerId)) arrow.releasePointerCapture(e.pointerId);
+                    arrow.style.cursor = 'grab';
+                }
+                arrow.addEventListener('pointerup', endDrag);
+                arrow.addEventListener('pointercancel', endDrag);
+            })();
 
             viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function (e) {
                 e.cancel = true;
