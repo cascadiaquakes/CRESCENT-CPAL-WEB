@@ -155,7 +155,8 @@ label {
     height: 50px;
     background-image: url('/static/images/north_white.png');
     background-size: contain;
-    pointer-events: none;
+    /* Draggable (see map_3d.html), so it takes pointer events. */
+    cursor: grab;
+    touch-action: none;
     z-index: 10000;
-    /* Prevent the arrow from interfering with map interaction */
 }
