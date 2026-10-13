@@ -124,11 +124,16 @@ You can also use the [Contact Us page](https://cpal.cascadiaquakes.org/request) 
 
 ## Acknowledgments
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/cascadiaquakes/.github/main/assets/crescent-logo.png" alt="CRESCENT" height="70">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://raw.githubusercontent.com/cascadiaquakes/.github/main/assets/nsf-logo.png" alt="U.S. National Science Foundation" height="70">
-</p>
+<table>
+  <tr>
+    <td align="center" valign="middle">
+      <img src="https://raw.githubusercontent.com/cascadiaquakes/.github/main/assets/crescent-circle.png" alt="CRESCENT Logo" width="150" />
+    </td>
+    <td align="center" valign="middle">
+      <img src="https://raw.githubusercontent.com/cascadiaquakes/.github/main/assets/nsf-logo.png" alt="NSF Logo" width="450" />
+    </td>
+  </tr>
+</table>
 
 This project is supported by the National Science Foundation through the Cascadia Region Earthquake Science Center (CRESCENT), Cooperative Agreement EAR-2225286, in collaboration with the USGS Powell Center Working Group on Cascadia Subduction Zone Earthquake Hazards.
 
