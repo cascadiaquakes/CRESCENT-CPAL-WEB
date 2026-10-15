@@ -385,6 +385,81 @@
                 }
             });
 
+            // Coastal flooding (Dura et al., 2025): the year's floodplain, plus the extra
+            // area flooded after earthquake subsidence. Files load once, then toggle.
+            const FLOOD_STYLE = {
+                floodplain: { color: '#3b82f6', alpha: 0.35, height: 0, label: 'Floodplain' },
+                added: { color: '#ef4444', alpha: 0.65, height: 5, label: 'Added flooding after subsidence' }
+            };
+            const SCENARIO_NAMES = { low: 'Low', med: 'Medium', hi: 'High' };
+            const floodSources = {};
+            let floodWanted = [];
+
+            function loadFlood(name, kind) {
+                if (floodSources[name]) return floodSources[name];
+                const style = FLOOD_STYLE[kind];
+                const fill = Cesium.Color.fromCssColorString(style.color).withAlpha(style.alpha);
+                floodSources[name] = Cesium.GeoJsonDataSource.load(`${SUBSIDENCE_URL}/${name}.geojson`)
+                    .then(function (ds) {
+                        ds.entities.values.forEach(function (e) {
+                            if (!e.polygon) return;
+                            e.polygon.material = fill;
+                            e.polygon.outline = false;
+                            // Flat at sea level (the globe has no terrain); added area sits just above.
+                            e.polygon.height = style.height;
+                            const p = e.properties.getValue(Cesium.JulianDate.now());
+                            const scen = p.scenario ? `<tr><th>Subsidence</th><td>${SCENARIO_NAMES[p.scenario]}</td></tr>` : '';
+                            e.name = `${p.estuary}: ${style.label}`;
+                            e.description = `<table class="cesium-infoBox-defaultTable"><tbody>
+                                <tr><th>Estuary</th><td>${p.estuary}</td></tr>
+                                <tr><th>Year</th><td>${p.year}</td></tr>${scen}
+                                <tr><th>Area</th><td>${p.area_km2} km&sup2;</td></tr>
+                                </tbody></table>
+                                <p>Source: Dura et al. (2025), PNAS,
+                                <a href="https://doi.org/10.1073/pnas.2424659122" target="_blank">doi:10.1073/pnas.2424659122</a></p>`;
+                        });
+                        ds.show = false;
+                        viewer.dataSources.add(ds);
+                        return ds;
+                    })
+                    .catch(function (err) {
+                        console.error(`Could not load flooding layer ${name}:`, err);
+                        delete floodSources[name];
+                    });
+                return floodSources[name];
+            }
+
+            function setFloodLegend(kinds) {
+                const legend = document.getElementById('legend');
+                legend.querySelectorAll('.flood-legend').forEach(function (el) { el.remove(); });
+                kinds.forEach(function (kind) {
+                    const s = FLOOD_STYLE[kind];
+                    const item = document.createElement('div');
+                    item.className = 'flood-legend';
+                    item.style.display = 'flex';
+                    item.style.alignItems = 'center';
+                    item.innerHTML = `<span style="width:14px;height:14px;border-radius:3px;background:${s.color};opacity:${Math.max(s.alpha, 0.6)}"></span>
+                        <span style="margin-left:10px;">${s.label}</span>`;
+                    legend.appendChild(item);
+                });
+            }
+
+            window.addEventListener("message", function (event) {
+                if (event.data.action !== "subsidence") return;
+                const { show, year, scenario } = event.data;
+                const wanted = show ? [[`floodplain_${year}`, 'floodplain']] : [];
+                if (show && scenario !== 'none') wanted.push([`added_${year}_${scenario}`, 'added']);
+                floodWanted = wanted.map(function (w) { return w[0]; });
+                Object.keys(floodSources).forEach(function (name) {
+                    floodSources[name].then(function (ds) { if (ds) ds.show = floodWanted.includes(name); });
+                });
+                wanted.forEach(function ([name, kind]) {
+                    // Checked again on load, in case the selection changed while it downloaded.
+                    loadFlood(name, kind).then(function (ds) { if (ds) ds.show = floodWanted.includes(name); });
+                });
+                setFloodLegend(wanted.map(function (w) { return w[1]; }));
+            });
+
             const siteDropdown = document.getElementById('siteSelectionDropdown');
             const siteLocations = new Map();
 

@@ -25,6 +25,9 @@ const COLUMNS_DESCRIPTION = {
     "terrestrial": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Terrestrial_Shaking_Data_Compilation_cell_descriptions.json',
     "tsunami": 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/json/Tsunami_Data_Compilation_cell_descriptions.json',
 };
+// Coastal flooding polygons (Dura et al., 2025): floodplain_{year} and added_{year}_{scenario}
+const SUBSIDENCE_URL = 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/subsidence';
+
 //const GEOJSON_URLS = {
 //    "coastal": '/static/geojson/Coastal_Deformation_Data_Compilation.geojson',
 //    "terrestrial": '/static/geojson/Terrestrial_Shaking_Data_Compilation.geojson',
