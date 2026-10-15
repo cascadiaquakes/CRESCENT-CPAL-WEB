@@ -404,6 +404,7 @@
                         ds.entities.values.forEach(function (e) {
                             if (!e.polygon) return;
                             e.polygon.material = fill;
+                            e.isFlood = true;
                             e.polygon.outline = false;
                             // Flat at sea level (the globe has no terrain); added area sits just above.
                             e.polygon.height = style.height;
@@ -412,7 +413,7 @@
                             e.name = `${p.estuary}: ${style.label}`;
                             e.description = `<table class="cesium-infoBox-defaultTable"><tbody>
                                 <tr><th>Estuary</th><td>${p.estuary}</td></tr>
-                                <tr><th>Year</th><td>${p.year}</td></tr>${scen}
+                                <tr><th>Year</th><td>${p.year === '2100' ? '2100 (projected sea level)' : p.year}</td></tr>${scen}
                                 <tr><th>Area</th><td>${p.area_km2} km&sup2;</td></tr>
                                 </tbody></table>
                                 <p>Source: Dura et al. (2025), PNAS,
@@ -1168,6 +1169,10 @@
                         let pickedLon = "N/A";
                         let pickedLat = "N/A";
                         const pickedObject = viewer.scene.pick(movement.position);
+                        // Flooding polygons use Cesium's info box; this handler replaces the default selection.
+                        const floodEntity = Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.isFlood ? pickedObject.id : undefined;
+                        viewer.selectedEntity = floodEntity;
+                        if (floodEntity) return;
                         if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.customProperties) {
                             const propertiesList = pickedObject.id.customProperties;
 
