@@ -907,6 +907,28 @@ label.uppercase-label {
     margin-bottom: 5px;
 }
 
+/* Checkbox and its label on one line (Coastal Flooding toggle) */
+.accordion-body .flood-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.accordion-body .flood-toggle-row input {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+}
+
+.accordion-body .flood-toggle-row label {
+    flex: 1 1 auto;
+    width: auto;
+    display: inline;
+    margin: 0;
+    font-size: 12px;
+    text-align: left;
+}
+
 /* Match CVM's rounded-input styling inside accordion bodies so CPAL's
    dropdowns and number inputs read the same as CVM's. */
 .accordion-body input[type="number"],

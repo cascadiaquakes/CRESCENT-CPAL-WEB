@@ -142,6 +142,42 @@
         </div>
     </div>
 
+    <!-- COASTAL FLOODING (Dura et al. subsidence polygons) -->
+    <div class="accordion-section">
+        <button class="accordion-header" type="button" onclick="toggleAccordion(this)">
+            <span class="accordion-arrow">&#9662;</span>
+            <span class="accordion-label">Coastal Flooding</span>
+        </button>
+        <div class="accordion-body">
+            <div class="field-row flood-toggle-row">
+                <input type="checkbox" id="floodToggle" onchange="updateFlooding()">
+                <label for="floodToggle">Show flooding</label>
+            </div>
+            <div class="field-row">
+                <label for="floodYear">Year</label>
+                <select id="floodYear" onchange="updateFlooding(true)">
+                    <option value="2023" selected>2023</option>
+                    <option value="2100">2100</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label for="floodScenario">Earthquake Subsidence</label>
+                <select id="floodScenario" onchange="updateFlooding(true)">
+                    <option value="none">None</option>
+                    <option value="low">Low</option>
+                    <option value="med" selected>Medium</option>
+                    <option value="hi">High</option>
+                </select>
+            </div>
+            <p class="export-helper">
+                Floodplain (blue) and the extra area flooded after earthquake subsidence (red) for 26 estuaries.
+                Source: <a href="https://doi.org/10.1073/pnas.2424659122" target="_blank" rel="noopener">Dura et al. (2025), PNAS</a>.
+                Data: <a href="https://github.com/DuraGEOSVT/Cascadia" target="_blank" rel="noopener">Cascadia</a>,
+                <a href="https://github.com/DuraGEOSVT/Cascadia2" target="_blank" rel="noopener">Cascadia2</a>.
+            </p>
+        </div>
+    </div>
+
     <!-- Chart Type select moved to the Analytics panel (uses id=xAxisSelector there). -->
 </div>
 
@@ -429,6 +465,20 @@
         } else if (name === "resetMarkers" && typeof win.resetMarkers === "function") {
             win.resetMarkers();
         }
+    }
+
+    // Coastal flooding layer: changing year or scenario also turns it on.
+    function updateFlooding(turnOn) {
+        const toggle = document.getElementById("floodToggle");
+        if (turnOn) toggle.checked = true;
+        const win = getMapFrame();
+        if (!win) return;
+        win.postMessage({
+            action: "subsidence",
+            show: toggle.checked,
+            year: document.getElementById("floodYear").value,
+            scenario: document.getElementById("floodScenario").value
+        }, "*");
     }
 
     function setSpreadOffset(value) {
