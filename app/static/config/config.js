@@ -27,6 +27,8 @@ const COLUMNS_DESCRIPTION = {
 };
 // Coastal flooding polygons (Dura et al., 2025): floodplain_{year} and added_{year}_{scenario}
 const SUBSIDENCE_URL = 'https://raw.githubusercontent.com/cascadiaquakes/CRESCENT-CPAL/refs/heads/main/data/geojson/subsidence';
+// Map tiles of the same layers (CpalSubsidenceTiles stack in CRESCENT-CPAL/infra/subsidence_tiles)
+const SUBSIDENCE_TILES_URL = 'https://dgi3yfoh059zq.cloudfront.net/subsidence';
 
 //const GEOJSON_URLS = {
 //    "coastal": '/static/geojson/Coastal_Deformation_Data_Compilation.geojson',

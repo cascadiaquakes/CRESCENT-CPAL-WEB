@@ -172,6 +172,8 @@
         <span id="coordLat">--</span>
         <span style="opacity:0.6;">,</span>
         <span id="coordLon">--</span>
+        <span style="opacity:0.6;">|</span>
+        <span id="zoomLevel">Zoom --</span>
     </div>
     <div id="logoContainer">
         <img src="" alt="Logo" id="logo-image">
@@ -295,7 +297,21 @@
                     if (coordLonEl) coordLonEl.textContent = lon.toFixed(3);
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
+            // Closest zoom ~500 m above the ground: streets and buildings, not single trees.
+            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500;
+
+            // Live zoom level (web-map equivalent) and camera height, next to the coordinates.
+            const zoomEl = document.getElementById('zoomLevel');
+            viewer.camera.percentageChanged = 0.01;
+            function updateZoom() {
+                const carto = viewer.camera.positionCartographic;
+                const mpp = 2 * carto.height * Math.tan(viewer.camera.frustum.fovy / 2) / viewer.canvas.clientHeight;
+                const zoom = Math.log2(156543.03392 * Math.cos(carto.latitude) / mpp);
+                const h = carto.height >= 1000 ? `${(carto.height / 1000).toFixed(1)} km` : `${Math.round(carto.height)} m`;
+                if (zoomEl) zoomEl.textContent = `Zoom ${zoom.toFixed(1)} \u00B7 ${h}`;
+            }
+            viewer.camera.changed.addEventListener(updateZoom);
+            updateZoom();
             viewer.scene.screenSpaceCameraController.maximumZoomDistance = 10000000;
 
             const canvas = viewer.canvas;
@@ -386,48 +402,56 @@
             });
 
             // Coastal flooding (Dura et al., 2025): the year's floodplain, plus the extra
-            // area flooded after earthquake subsidence. Files load once, then toggle.
+            // area flooded after earthquake subsidence. Drawn as image tiles on the globe so
+            // they stay visible at every zoom; the GeoJSON is only loaded to answer clicks.
             const FLOOD_STYLE = {
-                floodplain: { color: '#3b82f6', alpha: 0.35, height: 0, label: 'Floodplain' },
-                added: { color: '#ef4444', alpha: 0.65, height: 5, label: 'Added flooding after subsidence' }
+                floodplain: { color: '#3b82f6', alpha: 0.45, label: 'Floodplain' },
+                added: { color: '#ef4444', alpha: 0.75, label: 'Added flooding after subsidence' }
             };
             const SCENARIO_NAMES = { low: 'Low', med: 'Medium', hi: 'High' };
-            const floodSources = {};
+            const BLANK_TILE = document.createElement('canvas');
+            BLANK_TILE.width = BLANK_TILE.height = 1;
+            const floodLayers = {};
+            const floodFeatures = {};
             let floodWanted = [];
 
-            function loadFlood(name, kind) {
-                if (floodSources[name]) return floodSources[name];
-                const style = FLOOD_STYLE[kind];
-                const fill = Cesium.Color.fromCssColorString(style.color).withAlpha(style.alpha);
-                floodSources[name] = Cesium.GeoJsonDataSource.load(`${SUBSIDENCE_URL}/${name}.geojson`)
-                    .then(function (ds) {
-                        ds.entities.values.forEach(function (e) {
-                            if (!e.polygon) return;
-                            e.polygon.material = fill;
-                            e.isFlood = true;
-                            e.polygon.outline = false;
-                            // Flat at sea level (the globe has no terrain); added area sits just above.
-                            e.polygon.height = style.height;
-                            const p = e.properties.getValue(Cesium.JulianDate.now());
-                            const scen = p.scenario ? `<tr><th>Subsidence</th><td>${SCENARIO_NAMES[p.scenario]}</td></tr>` : '';
-                            e.name = `${p.estuary}: ${style.label}`;
-                            e.description = `<table class="cesium-infoBox-defaultTable"><tbody>
-                                <tr><th>Estuary</th><td>${p.estuary}</td></tr>
-                                <tr><th>Year</th><td>${p.year === '2100' ? '2100 (projected sea level)' : p.year}</td></tr>${scen}
-                                <tr><th>Area</th><td>${p.area_km2} km&sup2;</td></tr>
-                                </tbody></table>
-                                <p>Source: Dura et al. (2025), PNAS,
-                                <a href="https://doi.org/10.1073/pnas.2424659122" target="_blank">doi:10.1073/pnas.2424659122</a></p>`;
+            function loadFloodLayer(name) {
+                if (floodLayers[name]) return floodLayers[name];
+                floodLayers[name] = fetch(`${SUBSIDENCE_TILES_URL}/${name}/index.json`)
+                    .then(function (r) { return r.json(); })
+                    .then(function (meta) {
+                        // Only request tiles that exist, so empty sea and land never 404.
+                        const have = new Set();
+                        Object.entries(meta.tiles).forEach(function ([z, list]) {
+                            list.forEach(function ([x, y]) { have.add(`${z}/${x}/${y}`); });
                         });
-                        ds.show = false;
-                        viewer.dataSources.add(ds);
-                        return ds;
+                        const provider = new Cesium.UrlTemplateImageryProvider({
+                            url: `${SUBSIDENCE_TILES_URL}/${name}/{z}/{x}/{y}.png`,
+                            tilingScheme: new Cesium.WebMercatorTilingScheme(),
+                            maximumLevel: meta.maxzoom,
+                            rectangle: Cesium.Rectangle.fromDegrees(...meta.bounds),
+                            credit: 'Flooding: Dura et al. (2025)'
+                        });
+                        const request = provider.requestImage.bind(provider);
+                        provider.requestImage = function (x, y, level, req) {
+                            return have.has(`${level}/${x}/${y}`) ? request(x, y, level, req) : Promise.resolve(BLANK_TILE);
+                        };
+                        const layer = viewer.imageryLayers.addImageryProvider(provider);
+                        layer.show = false;
+                        // Keep the added flooding above the floodplain.
+                        if (name.startsWith('added')) {
+                            viewer.imageryLayers.raiseToTop(layer);
+                        } else {
+                            Object.keys(floodLayers).filter(function (n) { return n.startsWith('added'); })
+                                .forEach(function (n) { floodLayers[n].then(function (l) { if (l) viewer.imageryLayers.raiseToTop(l); }); });
+                        }
+                        return layer;
                     })
                     .catch(function (err) {
                         console.error(`Could not load flooding layer ${name}:`, err);
-                        delete floodSources[name];
+                        delete floodLayers[name];
                     });
-                return floodSources[name];
+                return floodLayers[name];
             }
 
             function setFloodLegend(kinds) {
@@ -451,15 +475,71 @@
                 const wanted = show ? [[`floodplain_${year}`, 'floodplain']] : [];
                 if (show && scenario !== 'none') wanted.push([`added_${year}_${scenario}`, 'added']);
                 floodWanted = wanted.map(function (w) { return w[0]; });
-                Object.keys(floodSources).forEach(function (name) {
-                    floodSources[name].then(function (ds) { if (ds) ds.show = floodWanted.includes(name); });
+                Object.keys(floodLayers).forEach(function (name) {
+                    floodLayers[name].then(function (l) { if (l) l.show = floodWanted.includes(name); });
                 });
-                wanted.forEach(function ([name, kind]) {
+                wanted.forEach(function ([name]) {
                     // Checked again on load, in case the selection changed while it downloaded.
-                    loadFlood(name, kind).then(function (ds) { if (ds) ds.show = floodWanted.includes(name); });
+                    loadFloodLayer(name).then(function (l) { if (l) l.show = floodWanted.includes(name); });
                 });
                 setFloodLegend(wanted.map(function (w) { return w[1]; }));
             });
+
+            function pointInRing(lon, lat, ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+                }
+                return inside;
+            }
+
+            function pointInFeature(lon, lat, f) {
+                const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+                return polys.some(function (rings) {
+                    return pointInRing(lon, lat, rings[0]) && !rings.slice(1).some(function (h) { return pointInRing(lon, lat, h); });
+                });
+            }
+
+            function loadFloodFeatures(name) {
+                if (!floodFeatures[name]) {
+                    floodFeatures[name] = fetch(`${SUBSIDENCE_URL}/${name}.geojson`).then(function (r) { return r.json(); })
+                        .catch(function () { delete floodFeatures[name]; return { features: [] }; });
+                }
+                return floodFeatures[name];
+            }
+
+            // Returns an entity describing the flooding under a screen position, or undefined.
+            window.floodEntityAt = async function (screenPosition) {
+                if (!floodWanted.length) return undefined;
+                const cartesian = viewer.camera.pickEllipsoid(screenPosition, viewer.scene.globe.ellipsoid);
+                if (!cartesian) return undefined;
+                const c = Cesium.Cartographic.fromCartesian(cartesian);
+                const lon = Cesium.Math.toDegrees(c.longitude), lat = Cesium.Math.toDegrees(c.latitude);
+                // Added flooding sits on top, so check it first.
+                const names = floodWanted.filter(function (n) { return n.startsWith('added'); })
+                    .concat(floodWanted.filter(function (n) { return !n.startsWith('added'); }));
+                for (const name of names) {
+                    const data = await loadFloodFeatures(name);
+                    const hit = data.features.find(function (f) { return pointInFeature(lon, lat, f); });
+                    if (!hit) continue;
+                    const p = hit.properties;
+                    const style = FLOOD_STYLE[name.startsWith('added') ? 'added' : 'floodplain'];
+                    const scen = p.scenario ? `<tr><th>Subsidence</th><td>${SCENARIO_NAMES[p.scenario]}</td></tr>` : '';
+                    return new Cesium.Entity({
+                        name: `${p.estuary}: ${style.label}`,
+                        position: cartesian,
+                        description: `<table class="cesium-infoBox-defaultTable"><tbody>
+                            <tr><th>Estuary</th><td>${p.estuary}</td></tr>
+                            <tr><th>Year</th><td>${p.year === '2100' ? '2100 (projected sea level)' : p.year}</td></tr>${scen}
+                            <tr><th>Area</th><td>${p.area_km2} km&sup2;</td></tr>
+                            </tbody></table>
+                            <p>Source: Dura et al. (2025), PNAS,
+                            <a href="https://doi.org/10.1073/pnas.2424659122" target="_blank">doi:10.1073/pnas.2424659122</a></p>`
+                    });
+                }
+                return undefined;
+            };
 
             const siteDropdown = document.getElementById('siteSelectionDropdown');
             const siteLocations = new Map();
@@ -1169,10 +1249,11 @@
                         let pickedLon = "N/A";
                         let pickedLat = "N/A";
                         const pickedObject = viewer.scene.pick(movement.position);
-                        // Flooding polygons use Cesium's info box; this handler replaces the default selection.
-                        const floodEntity = Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.isFlood ? pickedObject.id : undefined;
-                        viewer.selectedEntity = floodEntity;
-                        if (floodEntity) return;
+                        // Markers win; otherwise show the flooding under the click in Cesium's info box.
+                        if (!(Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.customProperties)) {
+                            viewer.selectedEntity = await window.floodEntityAt(movement.position);
+                            if (viewer.selectedEntity) return;
+                        }
                         if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.customProperties) {
                             const propertiesList = pickedObject.id.customProperties;
 
