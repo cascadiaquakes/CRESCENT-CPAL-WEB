@@ -258,7 +258,9 @@
             const workingImagery = Cesium.createDefaultImageryProviderViewModels().filter(function (vm) {
                 return !/Sentinel-2|Blue Marble|Earth at night|Stadia/i.test(vm.name);
             });
-            const defaultImagery = workingImagery.find(function (vm) { return vm.name === 'ArcGIS World Imagery'; });
+            // Bing Aerial is sharper than ArcGIS along the coast at street level, which matters for the flooding layer.
+            const defaultImagery = workingImagery.find(function (vm) { return vm.name === 'Bing Maps Aerial'; })
+                || workingImagery.find(function (vm) { return vm.name === 'ArcGIS World Imagery'; });
 
             console.log("Setting the viewer");
 
