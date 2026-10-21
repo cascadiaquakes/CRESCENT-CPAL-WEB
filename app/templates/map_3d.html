@@ -300,7 +300,19 @@
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             // Closest zoom ~500 m above the ground: streets and buildings, not single trees.
-            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500;
+            // minimumZoomDistance only limits zooming toward the point under the cursor, so tilting
+            // can still sink the camera; hold its height at the floor every frame as well.
+            const MIN_CAMERA_HEIGHT = 500;
+            viewer.scene.screenSpaceCameraController.minimumZoomDistance = MIN_CAMERA_HEIGHT;
+            viewer.scene.preRender.addEventListener(function () {
+                const c = viewer.camera.positionCartographic;
+                if (c.height < MIN_CAMERA_HEIGHT) {
+                    viewer.camera.setView({
+                        destination: Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, MIN_CAMERA_HEIGHT),
+                        orientation: { heading: viewer.camera.heading, pitch: viewer.camera.pitch, roll: viewer.camera.roll }
+                    });
+                }
+            });
 
             // Live zoom level (web-map equivalent) and camera height, next to the coordinates.
             const zoomEl = document.getElementById('zoomLevel');
