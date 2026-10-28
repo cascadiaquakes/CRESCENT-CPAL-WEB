@@ -888,21 +888,34 @@ option {
     padding: 4px 0;
 }
 
-.dataset-picker-menu label {
+/* Scoped by id so the sidebar's .column .field-row label rule doesn't win. */
+#datasetContainer .dataset-picker-menu label {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     gap: 8px;
+    margin: 0;
     padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: left;
     color: #334155;
     cursor: pointer;
 }
 
-.dataset-picker-menu label:hover {
+#datasetContainer .dataset-picker-menu label:hover {
     background: #f1f5f9;
 }
 
-.dataset-picker-menu input {
-    margin: 0;
+#datasetContainer .dataset-picker-menu input {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 2px 0 0;
+}
+
+#datasetContainer .dataset-picker-menu span {
+    flex: 1 1 auto;
 }
 
 /* Uppercase label pattern used elsewhere in the sidebar. */
