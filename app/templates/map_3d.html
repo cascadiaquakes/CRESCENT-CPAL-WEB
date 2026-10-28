@@ -423,6 +423,10 @@
                 added: { color: '#ef4444', alpha: 0.75, label: 'Added flooding after subsidence' }
             };
             const SCENARIO_NAMES = { low: 'Low', med: 'Medium', hi: 'High' };
+            // Each added_* file holds only the area a scenario floods beyond the one below it,
+            // so a scenario is drawn together with every lower one.
+            const SCENARIO_ORDER = ['low', 'med', 'hi'];
+            let floodScenario = 'none';
             const BLANK_TILE = document.createElement('canvas');
             BLANK_TILE.width = BLANK_TILE.height = 1;
             const floodLayers = {};
@@ -487,7 +491,12 @@
                 if (event.data.action !== "subsidence") return;
                 const { show, year, scenario } = event.data;
                 const wanted = show ? [[`floodplain_${year}`, 'floodplain']] : [];
-                if (show && scenario !== 'none') wanted.push([`added_${year}_${scenario}`, 'added']);
+                if (show && scenario !== 'none') {
+                    SCENARIO_ORDER.slice(0, SCENARIO_ORDER.indexOf(scenario) + 1).forEach(function (s) {
+                        wanted.push([`added_${year}_${s}`, 'added']);
+                    });
+                }
+                floodScenario = scenario;
                 floodWanted = wanted.map(function (w) { return w[0]; });
                 Object.keys(floodLayers).forEach(function (name) {
                     floodLayers[name].then(function (l) { if (l) l.show = floodWanted.includes(name); });
@@ -496,7 +505,7 @@
                     // Checked again on load, in case the selection changed while it downloaded.
                     loadFloodLayer(name).then(function (l) { if (l) l.show = floodWanted.includes(name); });
                 });
-                setFloodLegend(wanted.map(function (w) { return w[1]; }));
+                setFloodLegend(Array.from(new Set(wanted.map(function (w) { return w[1]; }))));
             });
 
             function pointInRing(lon, lat, ring) {
@@ -539,14 +548,26 @@
                     if (!hit) continue;
                     const p = hit.properties;
                     const style = FLOOD_STYLE[name.startsWith('added') ? 'added' : 'floodplain'];
-                    const scen = p.scenario ? `<tr><th>Subsidence</th><td>${SCENARIO_NAMES[p.scenario]}</td></tr>` : '';
+                    let scen = '';
+                    let area = p.area_km2;
+                    if (name.startsWith('added')) {
+                        // Report the selected scenario and this estuary's area summed over the stacked layers.
+                        scen = `<tr><th>Subsidence</th><td>${SCENARIO_NAMES[floodScenario]}</td></tr>`;
+                        area = 0;
+                        for (const added of floodWanted.filter(function (n) { return n.startsWith('added'); })) {
+                            const layer = await loadFloodFeatures(added);
+                            const f = layer.features.find(function (x) { return x.properties.estuary === p.estuary; });
+                            if (f) area += Number(f.properties.area_km2) || 0;
+                        }
+                        area = Math.round(area * 100) / 100;
+                    }
                     return new Cesium.Entity({
                         name: `${p.estuary}: ${style.label}`,
                         position: cartesian,
                         description: `<table class="cesium-infoBox-defaultTable"><tbody>
                             <tr><th>Estuary</th><td>${p.estuary}</td></tr>
                             <tr><th>Year</th><td>${p.year === '2100' ? '2100 (projected sea level)' : p.year}</td></tr>${scen}
-                            <tr><th>Area</th><td>${p.area_km2} km&sup2;</td></tr>
+                            <tr><th>Area</th><td>${area} km&sup2;</td></tr>
                             </tbody></table>
                             <p>Source: Dura et al. (2025), PNAS,
                             <a href="https://doi.org/10.1073/pnas.2424659122" target="_blank">doi:10.1073/pnas.2424659122</a></p>`
@@ -959,10 +980,9 @@
             const dropdown = document.createElement('select');
             dropdown.id = 'datasetDropdown';
             dropdown.multiple = true;
-            // Render as a compact dropdown, not a persistent list box, so
-            // it mirrors the Site selector's look until the user opens it.
-            dropdown.size = 1;
-            dropdown.style.width = '100%';
+            // The select only holds the selection (the chart reads it); people use the
+            // checkbox dropdown below, since a one-row multi-select can't be clicked open.
+            dropdown.hidden = true;
             datasetContainer.appendChild(dropdown);
 
             PROXIES.forEach((proxyKey2) => {
@@ -972,6 +992,47 @@
                 option.selected = true;
                 dropdown.appendChild(option);
             });
+
+            const parentDoc = window.parent.document;
+            const picker = parentDoc.createElement('div');
+            picker.className = 'dataset-picker';
+            const pickerButton = parentDoc.createElement('button');
+            pickerButton.type = 'button';
+            pickerButton.className = 'dataset-picker-button';
+            pickerButton.setAttribute('aria-haspopup', 'true');
+            pickerButton.setAttribute('aria-expanded', 'false');
+            const pickerMenu = parentDoc.createElement('div');
+            pickerMenu.className = 'dataset-picker-menu';
+            pickerMenu.hidden = true;
+            Array.from(dropdown.options).forEach((option) => {
+                const row = parentDoc.createElement('label');
+                const box = parentDoc.createElement('input');
+                box.type = 'checkbox';
+                box.checked = option.selected;
+                box.addEventListener('change', () => {
+                    option.selected = box.checked;
+                    dropdown.dispatchEvent(new Event('change'));
+                });
+                row.append(box, ' ' + option.textContent);
+                pickerMenu.appendChild(row);
+            });
+            function updatePickerLabel() {
+                const n = dropdown.selectedOptions.length, total = dropdown.options.length;
+                pickerButton.textContent = n === total ? `All datasets (${total})` : n === 0 ? 'No datasets' : `${n} of ${total} datasets`;
+            }
+            function setPickerOpen(open) {
+                pickerMenu.hidden = !open;
+                pickerButton.setAttribute('aria-expanded', String(open));
+            }
+            pickerButton.addEventListener('click', () => setPickerOpen(pickerMenu.hidden));
+            parentDoc.addEventListener('click', (e) => { if (!picker.contains(e.target)) setPickerOpen(false); });
+            // Clicks on the map land in this iframe and never reach the sidebar.
+            document.addEventListener('pointerdown', () => setPickerOpen(false));
+            parentDoc.addEventListener('keydown', (e) => { if (e.key === 'Escape') setPickerOpen(false); });
+            dropdown.addEventListener('change', updatePickerLabel);
+            updatePickerLabel();
+            picker.append(pickerButton, pickerMenu);
+            datasetContainer.appendChild(picker);
 
             function updateMarkerVisibility() {
                 const selectedOptions = Array.from(dropdown.selectedOptions).map(option => option.value);

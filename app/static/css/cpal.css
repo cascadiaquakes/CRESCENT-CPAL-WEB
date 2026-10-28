@@ -853,6 +853,58 @@ option {
     font-weight: 600 !important;
 }
 
+/* Dataset checkbox dropdown (replaces the one-row multi-select) */
+.dataset-picker {
+    position: relative;
+}
+
+.dataset-picker-button {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 28px 6px 10px;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23475569'/%3E%3C/svg%3E") no-repeat right 10px center;
+    color: #0f172a;
+    cursor: pointer;
+}
+
+.dataset-picker-button:focus {
+    outline: none;
+    border-color: #0b4a53;
+    box-shadow: 0 0 0 3px rgba(11, 74, 83, 0.15);
+}
+
+.dataset-picker-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    padding: 4px 0;
+}
+
+.dataset-picker-menu label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.dataset-picker-menu label:hover {
+    background: #f1f5f9;
+}
+
+.dataset-picker-menu input {
+    margin: 0;
+}
+
 /* Uppercase label pattern used elsewhere in the sidebar. */
 .field-row label.uppercase-label,
 label.uppercase-label {
