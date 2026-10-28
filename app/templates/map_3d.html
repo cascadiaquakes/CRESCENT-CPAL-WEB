@@ -1013,7 +1013,9 @@
                     option.selected = box.checked;
                     dropdown.dispatchEvent(new Event('change'));
                 });
-                row.append(box, ' ' + option.textContent);
+                const text = parentDoc.createElement('span');
+                text.textContent = option.textContent;
+                row.append(box, text);
                 pickerMenu.appendChild(row);
             });
             function updatePickerLabel() {
