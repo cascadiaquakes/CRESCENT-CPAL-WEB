@@ -2,19 +2,32 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "The Cascadia Region Earthquake Science Center (CRESCENT) Paleoseismology Repository and Viewer"
 type: software
+version: "2.0.0"
 authors:
   - family-names: Marfo
     given-names: William
+    orcid: "https://orcid.org/0009-0003-0631-2750"
     affiliation: "Cascadia Region Earthquake Science Center, University of California, Davis"
   - family-names: Thomas
     given-names: Amanda M.
+    orcid: "https://orcid.org/0000-0001-6997-3140"
     affiliation: "Department of Earth and Planetary Sciences, University of California, Davis"
+  - family-names: Dura
+    given-names: Tina
+    orcid: "https://orcid.org/0000-0003-0830-7894"
+    affiliation: "Virginia Tech"
+  - family-names: Staisch
+    given-names: Lydia
+    orcid: "https://orcid.org/0000-0002-1414-5994"
+    affiliation: "U.S. Geological Survey"
   - family-names: Bachelot
-    given-names: Loic
+    given-names: Loïc
+    orcid: "https://orcid.org/0000-0003-0711-8581"
     affiliation: "Cascadia Region Earthquake Science Center, University of Oregon"
+  - name: "CRESCENT CPAL working group"
 repository-code: "https://github.com/cascadiaquakes/CRESCENT-CPAL-WEB"
 url: "https://cpal.cascadiaquakes.org"
-license: CC-BY-4.0
+license: BSD-3-Clause
 keywords:
   - paleoseismology
   - Cascadia Subduction Zone
