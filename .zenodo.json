@@ -3,19 +3,35 @@
   "description": "The Paleoseismology (CPAL) Repository and Viewer is a community-oriented, curated collection of paleoseismic data compilations developed within the CRESCENT cyberinfrastructure framework to support research, visualization, and analysis of Cascadia subduction zone paleoseismology. The repository standardizes paleoseismic records from the USGS Powell Center compilation (coastal deformation, marine shaking, terrestrial shaking, and tsunami evidence) into a consistent, machine-readable format. The accompanying interactive web-based CPAL Viewer (https://cpal.cascadiaquakes.org) allows users to explore, filter, and download paleoseismic records in real time. Comprehensive documentation, metadata standards, and submission guidelines are provided in the project's Jupyter Book (https://cascadiaquakes.github.io/cpal-book/).",
   "upload_type": "software",
   "access_right": "open",
-  "license": "CC-BY-4.0",
+  "license": "BSD-3-Clause",
   "creators": [
     {
       "name": "Marfo, William",
+      "orcid": "0009-0003-0631-2750",
       "affiliation": "Cascadia Region Earthquake Science Center, University of California, Davis"
     },
     {
       "name": "Thomas, Amanda M.",
+      "orcid": "0000-0001-6997-3140",
       "affiliation": "Department of Earth and Planetary Sciences, University of California, Davis"
     },
     {
-      "name": "Bachelot, Loic",
+      "name": "Dura, Tina",
+      "orcid": "0000-0003-0830-7894",
+      "affiliation": "Virginia Tech"
+    },
+    {
+      "name": "Staisch, Lydia",
+      "orcid": "0000-0002-1414-5994",
+      "affiliation": "U.S. Geological Survey"
+    },
+    {
+      "name": "Bachelot, Loïc",
+      "orcid": "0000-0003-0711-8581",
       "affiliation": "Cascadia Region Earthquake Science Center, University of Oregon"
+    },
+    {
+      "name": "CRESCENT CPAL working group"
     }
   ],
   "keywords": [
@@ -45,5 +61,6 @@
       "identifier": "https://cascadiaquakes.github.io/cpal-book/",
       "resource_type": "publication-book"
     }
-  ]
+  ],
+  "version": "2.0.0"
 }
